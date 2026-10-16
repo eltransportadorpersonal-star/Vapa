@@ -1,0 +1,1 @@
+V43 diseño visual: favicon P VAPA en SVG, armonización de bordes, sombras, controles, tarjetas y fotografías en catálogo y ficha pública. No cambia lógica de reservas ni panel de administración. No publicar aún: pagos y pruebas pendientes.

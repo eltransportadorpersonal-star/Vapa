@@ -1,0 +1,6 @@
+VAPA V60: bandeja central de solicitudes, leads persistentes en Supabase y solicitudes de servicios.
+1. Ejecutar V60_MIGRACION_SUPABASE.sql en SQL Editor (requiere tablas V55).
+2. Verificar que public.profiles contiene id uuid y role=admin para la cuenta administradora. Si tu esquema usa otro modelo de roles, adaptar v60_is_admin antes de ejecutar.
+3. Subir ZIP a Netlify y probar como administrador y como cliente.
+4. Esta fase NO implementa captura, retención, devolución de pagos, asignación de conductor ni avisos automáticos. Aprobar cambia solo el estado interno.
+5. Las solicitudes de viajes siguen usando el formulario V55 existente.

@@ -1,0 +1,1 @@
+Corrección V51: selección de personas eliminada del formulario principal; cantidad de perros independiente de personas. Ejecutar V51_PRECIOS_BLOQUES.sql actualizado en Supabase antes de probar reservas. La base mantiene 1 persona titular como dato interno, sin cobro por persona.

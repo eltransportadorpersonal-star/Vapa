@@ -1,0 +1,9 @@
+VAPA V52 - STAGING (aprobaciones)
+
+Incluye: panel del propietario, aceptar/rechazar con RPC segura, plazo de 12 horas contado desde verificación de pago, marcado de devoluciones pendientes, migración SQL.
+
+NO HABILITAR PAGOS REALES CON ESTA VERSIÓN.
+
+PENDIENTE PARA PRODUCCIÓN: implementar Edge Function segura que llame API de Mercado Pago para reembolsar el pago original; comprobar su respuesta y persistir refund_status='completed' o 'failed'; programar ejecución recurrente de v52_expire_owner_requests con service_role y el procesamiento de devoluciones, con idempotencia y conciliación. El SQL por sí solo NO ejecuta automáticamente la expiración ni devuelve dinero. Nunca recolectar datos bancarios sin necesidad; primero reembolso al medio original.
+
+No se ha probado contra Supabase ni Mercado Pago reales. Ejecutar V52_APROBACION_RESERVAS.sql en STAGING y probar con pagos de prueba antes de producción.

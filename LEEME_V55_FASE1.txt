@@ -1,0 +1,9 @@
+VAPA V55 - FASE 1 (STAGING)
+1. Hacer respaldo de Supabase.
+2. Ejecutar V55_FASE1_SUPABASE.sql en SQL Editor. Si falla por columnas existentes distintas, detenerse y compartir el error.
+3. Publicar ZIP en sitio de PRUEBAS Netlify, nunca producción de pagos.
+4. Abrir Mapa, Transporte y Servicios desde web o barra móvil.
+5. Para mostrar pins, configurar map_lat/map_lng de cada propiedad publicada con ubicaciones APROXIMADAS y autorizadas; sin estos datos la propiedad aparece en lista sin pin.
+6. Registro de conductores, profesionales y solicitudes de transporte requiere inicio de sesión; son formularios de solicitud, no reservas pagadas.
+7. PENDIENTE: verificar columnas existentes de perros, moderación administrativa, verificación documental, despacho, rutas, cotizaciones, pasarela de pagos, reembolsos, liquidaciones y comisiones automáticas.
+Comisión comercial acordada: 10% transporte, 10% servicios profesionales. No se realiza ningún cobro en esta fase.

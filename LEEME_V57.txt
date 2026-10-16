@@ -1,0 +1,8 @@
+VAPA V57 - Navegación y mapa combinado
+- Botón «Perros» en la navegación inferior móvil lleva al módulo de transporte con tarifario.
+- El mapa permite filtrar propiedades, transportistas o ambos.
+- Solo se muestran conductores aprobados; sus pines requieren map_lat/map_lng de zona aproximada.
+- Ejecutar V57_TRANSPORTISTAS_MAPA_SQL.sql en Supabase SQL Editor.
+- Las coordenadas de zona deben cargarse desde Supabase por el administrador después de verificar al conductor.
+- El listado de conductores no incluye datos personales, contacto ni ubicación en vivo.
+- Cotizaciones de ruta siguen sujetas a los límites del servicio público de geocodificación/ruteo del prototipo.

@@ -1,0 +1,9 @@
+VAPA V52B: PANEL MOVIL DE RESERVAS DEL PROPIETARIO
+1. Ejecutar V52B_VISIBILIDAD_PROPIETARIO.sql en VAPA PRUEBAS (revisar respaldo).
+2. Publicar el contenido del ZIP en el sitio STAGING de Netlify.
+3. Entrar con el usuario dueño de una propiedad, abrir Aprobar reservas.
+4. Deben verse las reservas sin pago y las pagadas, con fichas de perros registradas.
+5. Aceptar/Rechazar solo disponible en pending_owner + paid.
+6. NO hay reembolsos automáticos ni expiración programada de 12h en este paquete.
+7. NO usar con pagos reales hasta implementar y probar webhook, reembolso y cron.
+8. Las características/servicios adicionales de propiedades descritas para V52 aún no están implementadas aquí.

@@ -1,0 +1,1 @@
+VAPA V41: ficha de propiedad dinámica desde Supabase. Publicar todos los archivos en Netlify. Ver propiedad abre datos y fotografías de properties/property_photos. La reserva aún no está habilitada, no se guarda ni cobra nada. No requiere migración SQL adicional. La ficha piloto antigua permanece en otras vistas internas, pero no se usa desde el catálogo público.

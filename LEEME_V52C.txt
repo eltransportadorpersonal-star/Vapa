@@ -1,0 +1,16 @@
+VAPA V52C - Corrección de panel de reservas para administrador
+
+1. Ejecutar V52C_ACCESO_ADMIN_RESERVAS.sql en Supabase SQL Editor.
+2. Publicar el contenido del ZIP en VAPA PRUEBAS en Netlify.
+3. Ingresar como administrador y abrir Aprobar reservas.
+4. Verificar reservas pending_payment de Casa Mila y las demás propiedades.
+5. Probar como propietario: solo debe ver reservas de sus propiedades.
+
+Cambios:
+- Panel identifica el rol admin y consulta todas las propiedades; propietario mantiene su filtro.
+- Políticas RLS de solo lectura para admin, sin cambiar pagos ni reservas.
+- Corrige el tratamiento de errores de lectura de perros.
+
+Limitaciones: la aceptación sigue disponible únicamente con pago confirmado.
+Los reembolsos automáticos y vencimientos por tarea programada aún no están implementados.
+No activar cobros reales hasta completar y validar esos flujos.

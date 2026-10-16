@@ -1,0 +1,11 @@
+V43 prueba incremental:
+- Eliminado botón Administrar Casa Mila del propietario.
+- Eliminado panel de propiedad Casa Mila estático; se conserva ficha dinámica y catálogo desde Supabase.
+- Eliminados KPI, reservas y evaluaciones ficticias del panel propietario.
+- Propietario: consulta propiedades por owner_id en Supabase.
+- Huésped: panel existente.
+- Mis perros: pantalla existente, exige sesión Supabase.
+- Agente: pantalla separada con comprobación de rol en profiles; funcionalidades pendientes.
+- Texto verde oscuro en navegación inferior.
+- No se modifica Supabase ni se habilitan pagos.
+- No se ha verificado flujo OAuth ni navegación en navegador real.

@@ -1,0 +1,6 @@
+VAPA V53 SQL CORREGIDO (STAGING)
+1. En Supabase SQL Editor ejecutar V53_SQL_CORREGIDO_EJECUTAR.sql, una sola consulta.
+2. Verificar que termine sin errores.
+3. Publicar en Netlify el ZIP completo en staging.
+4. No habilitar pagos reales: faltan webhook para preaprobaciones, cron de vencimientos, devoluciones y liquidación automática de bonos/comisiones.
+El bono acordado es CLP 10.000 tras el primer huésped pagado y el agente recibe 50% de la comisión de VAPA; no se generan automáticamente todavía.

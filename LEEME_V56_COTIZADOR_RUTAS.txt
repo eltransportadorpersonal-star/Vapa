@@ -1,0 +1,7 @@
+VAPA V56: cotizador de rutas A → B con parada C opcional.
+- Geocodificación: Nominatim OpenStreetMap; rutas: servidor público de demostración OSRM; mapa: Leaflet.
+- El cotizador calcula km, minutos estimados y tarifa piloto VAPA automáticamente después de escribir direcciones.
+- Fórmula: (1500 + 450*km + 120*minutos)*1.15, redondeada a $100 CLP.
+- No consulta tarifas reales Uber, no incluye tráfico en vivo, peajes ni tiempos de espera.
+- La cotización se adjunta a la solicitud de traslado, sin cobrar ni asignar conductor.
+IMPORTANTE PARA PRODUCCIÓN: sustituir servicios públicos gratuitos por proveedor de geocodificación y rutas con SLA, credenciales seguras, límites y términos comerciales adecuados (por ejemplo Google Maps Routes + Places), preferiblemente mediante backend. No utilizar los endpoints públicos de demostración como infraestructura de producción.

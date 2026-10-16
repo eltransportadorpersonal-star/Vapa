@@ -1,0 +1,12 @@
+VAPA V65: Google Maps en Transporte.
+
+IMPORTANTE: Esta versión incorpora una Netlify Function que entrega la clave pública restringida por dominio. Para que funcione, publicar mediante un repositorio Git conectado a Netlify (build con netlify.toml) o Netlify CLI con soporte de funciones. El despliegue manual de ZIP estático NO despliega automáticamente Netlify Functions.
+
+GOOGLE_MAPS_API_KEY debe estar configurada en Netlify para Production.
+Habilitar también Directions API (Legacy) en el mismo proyecto Google Cloud: el cálculo de rutas de esta versión usa Google Maps JavaScript DirectionsService. Mantener Maps JavaScript API y Places API (New) habilitadas. Routes API puede permanecer habilitada pero no se utiliza para esta cotización.
+
+Google puede requerir un Map ID para marcadores avanzados, pero esta implementación utiliza marcadores estándar.
+
+El precio sigue siendo estimado y no procesa pagos. La solicitud sigue usando el formulario y administración de la V64.
+
+Pruebas: (1) botón Solicitar viaje (2) autocompletar origen y destino (3) ruta y tarifa (4) parada C (5) usar recorrido en solicitud (6) recepción en administración.

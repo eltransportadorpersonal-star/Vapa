@@ -1,0 +1,3 @@
+VAPA V55C - Tarifario de transporte A/B/C y aviso de conexión oculto.
+El precio se calcula como tarifa Uber ingresada manualmente x 1,15. No hay integración de cotización Uber en vivo; es una estimación no vinculante. No hay cobros de transporte activos.
+Sin cambios SQL. Publicar en Netlify staging.

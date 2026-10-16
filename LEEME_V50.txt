@@ -1,0 +1,8 @@
+VAPA V50 AGENTES
+1. Subir ZIP a Netlify PRUEBAS.
+2. Ejecutar V49_CAPTADORES.sql si aún no se aplicó.
+3. Ejecutar V50_AGENTES_SQL.sql en Supabase SQL Editor.
+4. Iniciar sesión y seleccionar Agente VAPA.
+5. Aceptar condiciones, inscribirse y subir propiedad.
+6. Revisar aprobación en administrador y atribución en vapa_agent_referrals.
+ATENCIÓN: el 50% no se liquida automáticamente. No hay pagos automáticos.

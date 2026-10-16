@@ -1,0 +1,12 @@
+VAPA V43: ajustes puntuales solicitados (14 octubre 2026)
+- Eliminada tarjeta 'Nuevos espacios / Próximamente' del bloque de propiedades destacadas.
+- Eliminados controles de perros pequeños y grandes adicionales en la reserva.
+- Un perro por persona, sin recargo por tamaño.
+- Descuento único por reserva: mayor porcentaje entre personas y bloques.
+  1: 0%, 2: 10%, 3: 15%, 4 personas: 20%. Bloques: 1:0%, 2:10%, 3:15%.
+- Se conserva checkbox Piscina: $18.000 sin piscina y $24.000 con piscina por persona/bloque.
+- Casa Mila tiene max_dogs=3 en Supabase: por seguridad se impiden reservas de 4 personas
+  hasta que el propietario confirme capacidad y se actualice ese dato.
+- Actualizada V43_MIGRACION_RESERVAS.sql con el cálculo de servidor.
+- No hay pasarela de pago real habilitada. No publicar como sistema comercial.
+- Probar en sitio Netlify de ensayo y respaldar antes de aplicar SQL.

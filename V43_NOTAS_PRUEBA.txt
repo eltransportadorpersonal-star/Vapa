@@ -1,0 +1,1 @@
+Versión de prueba: hasta 4 personas y 3 perros (uno por persona). Google requiere proveedor habilitado en Supabase Auth > Providers y URL de retorno autorizada en Auth > URL Configuration. Badge Powered by Netlify inyectado por plataforma puede no obedecer estilos del sitio. Reservas reales requieren migración SQL y pruebas. Webpay no integrado.

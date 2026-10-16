@@ -1,0 +1,15 @@
+VAPA V49 - Programa de captadores y límite de perros
+
+Cambios en interfaz:
+- Hasta 3 perros por persona, sujeto al máximo autorizado de cada propiedad.
+- Panel de agente muestra incentivos $5.000 (300-1000 m²) y $10.000 (>1000 m²), más 50% de la comisión neta de plataforma, repartida en partes iguales entre agente y VAPA.
+- Incluye migración inicial V49_CAPTADORES.sql para referencias y movimientos.
+
+IMPORTANTE:
+- No se cambió la integración de Mercado Pago ni se probó una transacción real.
+- El límite real de perros puede seguir restringido por la columna max_dogs y la RPC v43_create_reservation. Ajustar ambas en Supabase tras revisar capacidad y seguridad.
+- No se activaron pagos automáticos de incentivos. Falta la función backend para generar y liquidar movimientos desde webhooks verificados, y el panel de administración.
+- El incentivo de 300 a 1000 m² se interpreta como $5.000 y >1000 m² como $10.000. Espacios menores de 300 m² no califican.
+- Para publicar, subir el contenido descomprimido al sitio de PRUEBAS de Netlify.
+
+Actualización 50/50: del monto neto de comisión de plataforma por cada reserva pagada, 50% corresponde al agente y 50% a VAPA, antes de otros gastos. No es 50% del valor total de la reserva.

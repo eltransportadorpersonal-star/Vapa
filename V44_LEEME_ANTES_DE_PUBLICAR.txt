@@ -1,0 +1,14 @@
+VAPA V44 - PROTOTIPO DE APROBACION, NO PUBLICAR A PRODUCCION TODAVIA.
+
+Incluye:
+- Interfaz móvil de propietario para aceptar/rechazar solicitudes pendientes.
+- Consulta del bloqueo de ingreso para el huésped.
+- Sincronización adicional de botón de sesión.
+- Migración SQL con aprobación, plazo de 24h, metadatos de perros y control de ingreso.
+
+PENDIENTES CRITICOS:
+1. El RPC v43_create_reservation aún genera pending_payment y expira en 15 minutos. Se necesita un backend de pago seguro y transición posterior a pending_owner. NO cambiar pending_payment a pending_owner desde cliente.
+2. Las fichas existentes se guardan en localStorage. Falta integrar subida segura de fotos a bucket PRIVADO, asociación de perros a reserva y lectura por propietario. La RPC v44_save_reservation_dog es una base para ello; verificar que el objeto exista antes de habilitar acceso.
+3. Revisar y probar RLS y políticas de almacenamiento. No desplegar SQL sin auditar datos existentes.
+4. Recordatorios automáticos requieren Edge Function + cron/servicio de correo, no incluidos.
+5. Probar con dos cuentas y diferentes teléfonos. No hay despliegue realizado.

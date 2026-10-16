@@ -1,0 +1,1 @@
+Vista Huésped: textos verde oscuro, carrusel fotos desde Supabase, vista ampliada y zoom. No modifica la base de datos. Comprobar en Netlify de prueba y con fotografías reales. Otras funciones (publicación móvil, pagos) siguen pendientes de pruebas.

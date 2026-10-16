@@ -1,0 +1,8 @@
+VAPA V51 - precios por bloque y perro adicional
+
+1. RESPALDAR Supabase. Ejecutar V51_PRECIOS_BLOQUES.sql en SQL Editor antes de publicar.
+2. Publicar este ZIP en Netlify staging.
+3. Probar una reserva de 1, 2, 3, 4, 5 y 6 bloques, con/sin piscina y 1-3 perros; verificar que el monto de Mercado Pago coincida con la reserva en Supabase.
+4. El anfitrion edita extra_dog_price y pool_price_per_block en su propiedad, sujeto a revision del administrador.
+5. La columna historica price_per_person se interpreta ahora como precio base por bloque, sin migrar valores previos.
+6. No publicar ni cobrar en produccion sin validar los flujos completos y el SQL.

@@ -1,0 +1,1 @@
+Corrección: formulario Postula tu espacio y panel de revisión del administrador ahora se insertan dentro del área principal. Al navegar se reinicia el scroll. Se mantiene el resto del código V43, incluida la reserva y Supabase. Probar en iPhone y Android antes de publicar.

@@ -1,0 +1,1 @@
+VAPA V61: ejecutar V61_MIGRACION_ASIGNACION.sql en Supabase antes de subir el ZIP a Netlify. Admin puede asignar viajes a conductores aprobados. Conductores ven solicitudes al abrir Transporte y pueden aceptar o rechazar. No se procesan pagos ni se envían avisos push/correo. Mercado Pago y notificaciones requieren integración posterior.

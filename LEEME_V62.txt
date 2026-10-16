@@ -1,0 +1,1 @@
+V62: botón Perros móvil abre Mis perros. Primer arriendo o viaje sin ficha; segunda solicitud exige ficha. Ejecutar V62_MIGRACION_PRIMER_SERVICIO.sql antes de publicar. Las solicitudes rechazadas/canceladas no consumen la primera oportunidad. Prueba en staging antes de producción.

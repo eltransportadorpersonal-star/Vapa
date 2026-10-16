@@ -1,0 +1,1 @@
+VAPA V42: recupera selección de fecha, horario, personas, perros, piscina y cotización dentro de la ficha dinámica de propiedades. No confirma ni guarda reservas: pendiente implementar disponibilidad transaccional y persistencia. Conserva panel /admin, catálogo y Supabase. Descomprimir y desplegar la carpeta completa en Netlify.
