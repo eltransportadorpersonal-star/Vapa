@@ -574,17 +574,47 @@ body:has(#v55ServicesPage.active) > #v53MobileQuick { display:none !important; }
 .v55-quick button:hover{background:#17634f!important;transform:translateY(-1px)}
 @media(max-width:800px){.v55-quick{grid-template-columns:1fr!important;gap:10px!important}.v55-quick button{min-height:60px!important;text-align:left!important;font-size:16px!important;padding:16px 19px!important}}
 </style>
+<style id="v68-six-bottom-tabs">
+@media(max-width:800px){
+ .mobile-bottom-nav.v43-four-nav{
+  position:fixed!important;top:auto!important;bottom:0!important;left:0!important;right:0!important;
+  display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;
+  width:100%!important;min-height:70px!important;height:auto!important;
+  overflow:visible!important;gap:1px!important;box-sizing:border-box!important;
+  padding:6px 3px calc(6px + env(safe-area-inset-bottom))!important;
+  background:#fff!important;border-top:1px solid #dce8e0!important;border-bottom:0!important;
+  box-shadow:0 -4px 16px #00000015!important;z-index:2147483000!important;
+ }
+ .mobile-bottom-nav.v43-four-nav button{
+  flex:none!important;min-width:0!important;min-height:56px!important;
+  width:100%!important;padding:5px 1px!important;gap:4px!important;
+  display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;
+  border-radius:9px!important;color:#476357!important;background:transparent!important;
+  white-space:normal!important;overflow:visible!important;
+ }
+ .mobile-bottom-nav.v43-four-nav button b{font-size:19px!important;line-height:1!important}
+ .mobile-bottom-nav.v43-four-nav button span{font-size:clamp(8px,2.1vw,10px)!important;line-height:1.1!important;font-weight:800!important;text-align:center!important;white-space:normal!important}
+ .mobile-bottom-nav.v43-four-nav button[aria-current="page"]{
+  background:#124b3d!important;color:white!important;box-shadow:0 2px 7px #123f3530!important;
+ }
+ .mobile-bottom-nav.v43-four-nav button[aria-current="page"] b,
+ .mobile-bottom-nav.v43-four-nav button[aria-current="page"] span{color:white!important}
+ body{padding-bottom:calc(84px + env(safe-area-inset-bottom))!important}
+ main{padding-top:72px!important;padding-bottom:calc(92px + env(safe-area-inset-bottom))!important}
+}
+</style>
 </head><body>
 <div class="mobile-topbar">
   <div class="mobile-logo">VAPA</div>
   <button type="button" class="v58-reservas-header" onclick="go('v52OwnerApprovals')" aria-label="Ver reservas"><span aria-hidden="true">▣</span> Reservas</button>
 </div>
-<nav class="mobile-bottom-nav v43-four-nav" aria-label="Modos VAPA">
-<button type="button" onclick="v43Mode('guest')"><b>⌕</b><span>Huésped</span></button>
-<button type="button" onclick="v43Mode('owner')"><b>⌂</b><span>Propietario</span></button>
-<button type="button" onclick="v43Mode('agent')"><b>▣</b><span>Agente VAPA</span></button>
-<button type="button" onclick="go('v55MapPage')"><b>⌖</b><span>Mapa</span></button><button type="button" onclick="go('myDogs')"><b>🐕</b><span>Perros</span></button><button type="button" onclick="go('v55ServicesPage')"><b>♧</b><span>Servicios</span></button>
-<button type="button" onclick="go('v55TransportPage')"><b>🚙</b><span>Transporte</span></button>
+<nav class="mobile-bottom-nav v43-four-nav" aria-label="Navegación principal VAPA">
+<button type="button" onclick="go('myDogs')" data-vapa-tab="dogs"><b aria-hidden="true">🐕</b><span>Perros</span></button>
+<button type="button" onclick="go('v55MapPage')" data-vapa-tab="map"><b aria-hidden="true">⌖</b><span>Mapa</span></button>
+<button type="button" onclick="go('publicCatalog')" data-vapa-tab="properties"><b aria-hidden="true">⌂</b><span>Propiedades</span></button>
+<button type="button" onclick="v43Mode('guest')" data-vapa-tab="guest"><b aria-hidden="true">⌕</b><span>Huésped</span></button>
+<button type="button" onclick="v43Mode('agent')" data-vapa-tab="agent"><b aria-hidden="true">▣</b><span>Agente VAPA</span></button>
+<button type="button" onclick="go('v55TransportPage')" data-vapa-tab="transport"><b aria-hidden="true">🚙</b><span>Transporte</span></button>
 </nav>
 
 
@@ -2416,38 +2446,61 @@ async function v61Assign(id){const driver=document.getElementById('v61-driver-'+
 const v61OldLoadInbox=window.v60LoadInbox;window.v60LoadInbox=async function(){await v61OldLoadInbox();await v61LoadAssignment()};
 </script>
 <script src="google-v65.js" defer></script>
-<script id="v67-active-mobile-menu">
+
+<style id="v69-six-tabs-top-only">
+/* V69: seis accesos exclusivos en la parte superior del movil */
+@media (max-width:800px){
+  body .mobile-bottom-nav.v43-four-nav{
+    position:fixed!important;top:58px!important;bottom:auto!important;left:0!important;right:0!important;
+    display:flex!important;flex-wrap:nowrap!important;grid-template-columns:none!important;
+    overflow-x:auto!important;overflow-y:hidden!important;align-items:stretch!important;
+    height:72px!important;min-height:72px!important;max-height:72px!important;
+    padding:7px 8px!important;gap:5px!important;box-sizing:border-box!important;
+    background:#fff!important;border-top:0!important;border-bottom:1px solid #dce8e0!important;
+    box-shadow:0 3px 12px #00000014!important;z-index:2147483000!important;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none;
+  }
+  body .mobile-bottom-nav.v43-four-nav::-webkit-scrollbar{display:none}
+  body .mobile-bottom-nav.v43-four-nav button{
+    flex:1 0 0!important;min-width:56px!important;max-width:none!important;
+    display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;
+    min-height:55px!important;padding:5px 2px!important;gap:2px!important;
+    border-radius:9px!important;color:#174a3b!important;background:#f2f6f3!important;
+    white-space:normal!important;text-align:center!important;
+  }
+  body .mobile-bottom-nav.v43-four-nav button b{font-size:18px!important;line-height:1!important;color:inherit!important}
+  body .mobile-bottom-nav.v43-four-nav button span{font-size:10px!important;line-height:1.1!important;white-space:normal!important;color:inherit!important;font-weight:750!important}
+  body .mobile-bottom-nav.v43-four-nav button[aria-current="page"]{background:#124b3d!important;color:#fff!important;box-shadow:0 2px 7px #123f3530!important}
+  body .mobile-bottom-nav.v43-four-nav button[aria-current="page"] span,
+  body .mobile-bottom-nav.v43-four-nav button[aria-current="page"] b{color:#fff!important}
+  body{padding-bottom:12px!important}
+  main{padding-top:140px!important;padding-bottom:24px!important}
+  #v55MapPage,#v55ServicesPage,#v55TransportPage{scroll-margin-top:140px}
+}
+</style>
+<script id="v68-active-mobile-menu">
 (function(){
-  const navSelector='.mobile-bottom-nav.v43-four-nav';
-  const routeMap={v55MapPage:3,myDogs:4,v55ServicesPage:5,v55TransportPage:6,
-    guestDashboard:0,publicCatalog:0,publicCasaMila:0,v41PropertyDetail:0,
-    hostDashboard:1,v43AgentPanel:2};
-  function update(){
-    const nav=document.querySelector(navSelector);if(!nav)return;
-    const active=document.querySelector('.page.active');
-    if(!active)return;
-    const index=routeMap[active.id];
-    if(index===undefined)return;
-    const buttons=[...nav.querySelectorAll('button')];
-    buttons.forEach((button,i)=>{
-      if(i===index){button.setAttribute('aria-current','page');button.setAttribute('aria-pressed','true')}
-      else{button.removeAttribute('aria-current');button.setAttribute('aria-pressed','false')}
-    });
-    const selected=buttons[index];
-    if(selected && window.innerWidth<=800 && selected.offsetWidth){
-      const n=nav.getBoundingClientRect(),b=selected.getBoundingClientRect();
-      if(b.left<n.left+4||b.right>n.right-4)selected.scrollIntoView({block:'nearest',inline:'nearest',behavior:'smooth'});
-    }
-  }
-  function init(){
-    const main=document.querySelector('main');if(!main)return;
-    let pending=false;
-    const observer=new MutationObserver(()=>{if(pending)return;pending=true;queueMicrotask(()=>{pending=false;update()})});
-    observer.observe(main,{attributes:true,attributeFilter:['class'],subtree:true});
-    document.querySelector(navSelector)?.addEventListener('click',()=>setTimeout(update,0));
-    update();
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+ const selector='.mobile-bottom-nav.v43-four-nav';
+ const pages={myDogs:'dogs',v55MapPage:'map',publicCatalog:'properties',guestDashboard:'guest',publicCasaMila:'properties',v41PropertyDetail:'properties',v43AgentPanel:'agent',v55TransportPage:'transport'};
+ function activePage(){return document.querySelector('.page.active')?.id || null}
+ function update(){
+  const nav=document.querySelector(selector);if(!nav)return;
+  const page=activePage();const target=pages[page];
+  const tabs=[...nav.querySelectorAll('button[data-vapa-tab]')];
+  tabs.forEach(btn=>{
+   const yes=!!target&&btn.dataset.vapaTab===target;
+   if(yes)btn.setAttribute('aria-current','page');else btn.removeAttribute('aria-current');
+   btn.setAttribute('aria-pressed',String(yes));
+  });
+ }
+ function init(){
+  const nav=document.querySelector(selector),main=document.querySelector('main');if(!nav||!main)return;
+  nav.addEventListener('click',()=>{setTimeout(update,0);setTimeout(update,150)});
+  let scheduled=false;
+  new MutationObserver(()=>{if(scheduled)return;scheduled=true;queueMicrotask(()=>{scheduled=false;update()})}).observe(main,{attributes:true,attributeFilter:['class'],subtree:true});
+  update();
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>
 </body></html>
