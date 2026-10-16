@@ -1,0 +1,1 @@
+VAPA V67: Accesos Mapa, Transporte y Servicios más grandes; menú móvil de siete secciones reubicado arriba bajo cabecera; sección activa destacada y sincronizada con la página visible. Incluye correcciones V66 de registro móvil. No modifica tablas ni políticas de Supabase.

@@ -537,6 +537,43 @@ body:has(#v55ServicesPage.active) > #v53MobileQuick { display:none !important; }
 }
 </style><style id="v63-dog-warning-style">.v63-dog-warning{background:#f0f6f1;border:1px solid #b8d3c4;border-left:4px solid #194d3e;border-radius:12px;padding:14px 16px;margin:14px 0;color:#173e33;font-size:14px;line-height:1.5}.v63-dog-warning strong{display:block;margin-bottom:5px;font-size:15px}.v63-dog-warning p{margin:0}</style>
 <script>function v63DogWarningHtml(){return `<div class="v63-dog-warning" role="note"><strong>Importante: registro de perros</strong><p>Tu primer traslado o arriendo se puede solicitar sin registrar a tu perro. Para tu segunda experiencia VAPA será obligatorio registrarlo en <b>Mis perros</b>. La excepción es una sola vez por cuenta, entre ambos servicios.</p></div>`}</script>
+<style id="v67-mobile-navigation-and-actions">
+/* V67: menu de secciones arriba, inmediatamente bajo la cabecera VAPA */
+@media(max-width:800px){
+  .mobile-bottom-nav.v43-four-nav{
+    position:fixed!important;top:58px!important;bottom:auto!important;left:0!important;right:0!important;
+    display:flex!important;align-items:stretch!important;overflow-x:auto!important;overflow-y:hidden!important;
+    scroll-snap-type:x proximity;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;
+    grid-template-columns:none!important;gap:5px!important;padding:8px 10px!important;
+    min-height:66px!important;height:66px!important;box-sizing:border-box!important;
+    border-top:0!important;border-bottom:1px solid #dce8e0!important;
+    background:#fff!important;box-shadow:0 3px 12px #00000012!important;z-index:2147483000!important;
+  }
+  .mobile-bottom-nav.v43-four-nav button{
+    flex:0 0 auto!important;min-width:82px!important;min-height:48px!important;
+    display:flex!important;flex-direction:column!important;justify-content:center!important;
+    padding:5px 10px!important;gap:2px!important;border-radius:11px!important;
+    color:#174a3b!important;white-space:nowrap!important;scroll-snap-align:center;
+  }
+  .mobile-bottom-nav.v43-four-nav button b{font-size:20px!important;line-height:1!important}
+  .mobile-bottom-nav.v43-four-nav button span{font-size:11px!important;line-height:1.2!important;font-weight:750!important;white-space:nowrap!important}
+  .mobile-bottom-nav.v43-four-nav button[aria-current="page"]{
+    background:#124b3d!important;color:#fff!important;box-shadow:0 2px 7px #123f3530!important;
+  }
+  .mobile-bottom-nav.v43-four-nav button[aria-current="page"] span,
+  .mobile-bottom-nav.v43-four-nav button[aria-current="page"] b{color:#fff!important}
+  body{padding-bottom:12px!important}
+  main{padding-top:140px!important;padding-bottom:24px!important}
+  #v55MapPage,#v55ServicesPage,#v55TransportPage{scroll-margin-top:132px}
+}
+/* Los accesos a los tres nuevos módulos tienen presencia visual equivalente al resto. */
+.v55-quick{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:14px!important;margin:22px 0 30px!important}
+.v55-quick button{width:100%!important;min-width:0!important;min-height:70px!important;padding:17px 20px!important;border-radius:15px!important;
+  background:#124b3d!important;color:#fff!important;font-size:16px!important;font-weight:800!important;line-height:1.35!important;
+  border:1px solid #2a6654!important;box-shadow:0 4px 12px #0c3e301c!important;cursor:pointer}
+.v55-quick button:hover{background:#17634f!important;transform:translateY(-1px)}
+@media(max-width:800px){.v55-quick{grid-template-columns:1fr!important;gap:10px!important}.v55-quick button{min-height:60px!important;text-align:left!important;font-size:16px!important;padding:16px 19px!important}}
+</style>
 </head><body>
 <div class="mobile-topbar">
   <div class="mobile-logo">VAPA</div>
@@ -1599,22 +1636,44 @@ function vapaDb(){
  return window.supabase.createClient(VAPA_CONFIG.supabaseUrl,VAPA_CONFIG.supabaseAnonKey);
 }
 async function submitRealProperty(e){
- e.preventDefault(); const db=vapaDb(), status=document.getElementById('realFormStatus');
- if(!db){status.textContent='Falta conectar Supabase en config.js.';return}
- status.textContent='Enviando espacio a VAPA...';
- const {data:{user}}=await db.auth.getUser();
- if(!user){status.textContent='Debes iniciar sesión antes de enviar una propiedad.';return}
- const f=e.target, fd=new FormData(f);
- const payload={owner_id:user.id,name:fd.get('name'),commune:fd.get('commune'),address:fd.get('address'),sqm:+fd.get('sqm'),price_per_person:+fd.get('price'),max_dogs:+fd.get('max_dogs'),description:fd.get('description'),status:'pending_review'};
- const {data:prop,error}=await db.from('properties').insert(payload).select().single();
- if(error){status.textContent='Error: '+error.message;return}
- const files=[...document.getElementById('realPhotos').files];
- for(let i=0;i<files.length;i++){
-   const path=user.id+'/'+prop.id+'/'+Date.now()+'-'+i+'-'+files[i].name.replace(/[^a-zA-Z0-9._-]/g,'_');
-   const up=await db.storage.from('property-photos').upload(path,files[i]);
-   if(!up.error){const pub=db.storage.from('property-photos').getPublicUrl(path).data.publicUrl;await db.from('property_photos').insert({property_id:prop.id,url:pub,sort_order:i})}
- }
- status.textContent='✓ Espacio enviado. VAPA lo revisará antes de publicarlo.'; f.reset();\n if(window.v50AgentSubmitting){window.v50AgentSubmitting=false;status.textContent+=' Tu captación quedó asociada automáticamente a tu cuenta de agente.';}
+ e.preventDefault();
+ const form=e.currentTarget, status=document.getElementById('realFormStatus');
+ const button=form.querySelector('button[type="submit"]');
+ if(button.disabled)return false;
+ button.disabled=true;
+ status.setAttribute('role','status');
+ status.textContent='Guardando tu propiedad. No cierres esta página...';
+ try{
+   const db=vapaDb();
+   if(!db)throw new Error('No se pudo conectar con Supabase.');
+   const {data:auth,error:authError}=await db.auth.getUser();
+   if(authError)throw authError;
+   const user=auth?.user;
+   if(!user)throw new Error('Tu sesión expiró. Inicia sesión y vuelve a enviar el formulario.');
+   const fd=new FormData(form);
+   const payload={owner_id:user.id,name:String(fd.get('name')||'').trim(),commune:String(fd.get('commune')||'').trim(),address:String(fd.get('address')||'').trim(),sqm:Number(fd.get('sqm')),price_per_person:Number(fd.get('price')),max_dogs:Number(fd.get('max_dogs')),description:String(fd.get('description')||'').trim(),status:'pending_review'};
+   if(!payload.name||!payload.commune||!payload.address||!payload.description||payload.sqm<=0||payload.max_dogs<=0)throw new Error('Revisa los campos obligatorios.');
+   const {data:prop,error}=await db.from('properties').insert(payload).select('id').single();
+   if(error)throw error;
+   // El registro principal ya existe; no repetir la inserción si falla alguna foto.
+   const files=[...(document.getElementById('realPhotos')?.files||[])];
+   let failedPhotos=0;
+   for(let i=0;i<files.length;i++){
+     const path=user.id+'/'+prop.id+'/'+Date.now()+'-'+i+'-'+files[i].name.replace(/[^a-zA-Z0-9._-]/g,'_');
+     const up=await db.storage.from('property-photos').upload(path,files[i]);
+     if(up.error){failedPhotos++;continue}
+     const url=db.storage.from('property-photos').getPublicUrl(path).data.publicUrl;
+     const {error:photoError}=await db.from('property_photos').insert({property_id:prop.id,url,sort_order:i});
+     if(photoError)failedPhotos++;
+   }
+   status.textContent=failedPhotos?'✓ Propiedad recibida y pendiente de aprobación. '+failedPhotos+' fotografía(s) no se pudieron adjuntar; no vuelvas a enviar la propiedad. Contacta a VAPA.':'✓ Propiedad enviada correctamente. Pendiente de aprobación de VAPA.';
+   form.reset();
+   if(window.v50AgentSubmitting){window.v50AgentSubmitting=false;status.textContent+=' Tu captación quedó asociada a tu cuenta de agente.';}
+ }catch(err){
+   console.error('VAPA: error al registrar propiedad',err);
+   status.textContent='No se pudo enviar la propiedad: '+(err?.message||'Error desconocido')+'. Tus datos siguen en el formulario para reintentar.';
+ }finally{button.disabled=false}
+ return false;
 }
 async function loadAdminProperties(status='pending_review'){
  const db=vapaDb(), box=document.getElementById('adminPropertyList'); if(!db){box.innerHTML='<div class="real-empty">Configura Supabase en config.js.</div>';return}
@@ -2336,7 +2395,7 @@ function v56DrawRoute(){if(!v56Quote)return;const el=document.getElementById('v5
 function v55CalculateFare(){v56ScheduleQuote()}
 function v55ApplyRoute(){if(!v56Quote){document.getElementById('v56RouteStatus').textContent='Primero calcula una ruta válida para usarla en la solicitud.';return}v55SwitchTransport('trip');const f=document.querySelector('#v55TransportForm form');if(!f)return;f.elements.origin_sector.value=v56Quote.a;f.elements.destination_sector.value=v56Quote.b;f.elements.notes.value=[v56Quote.c?'Parada C: '+v56Quote.c:'','Distancia: '+v56Quote.km.toFixed(1)+' km','Duración estimada: '+Math.round(v56Quote.mins)+' min','Cotización referencial VAPA: '+v56Money(v56Quote.total)+' CLP (sujeta a confirmación)'].filter(Boolean).join(' | ');document.getElementById('v55TransportForm').scrollIntoView({behavior:'smooth',block:'start'})}
 ['A','B','C'].forEach(k=>document.getElementById('v55Point'+k)?.addEventListener('input',()=>v64Typing(k)));/* Google Maps V65 initializes the route map */
-function v55SwitchTransport(mode){const root=document.getElementById('v55TransportForm');if(!root)return;root.replaceChildren();const title=document.createElement('h2');title.textContent=mode==='driver'?'Inscripción de conductor':'Solicitud de traslado';root.append(title);const f=document.createElement('form');f.innerHTML=mode==='driver'?'<label>Sector de cobertura</label><input name="sector" required maxlength="100"><label>Tipo de vehículo</label><input name="vehicle_type" required maxlength="100"><label>Capacidad máxima de perros</label><input name="dog_capacity" type="number" min="1" max="20" required><label>Descripción del espacio para mascotas</label><textarea name="notes" required maxlength="1000"></textarea><button>Solicitar inscripción</button>':' + v63DogWarningHtml() + '<label>Sector de origen</label><input name="origin_sector" required maxlength="120"><label>Sector de destino</label><input name="destination_sector" required maxlength="120"><label>Fecha y hora deseada</label><input name="requested_at" type="datetime-local" required><label>Perros de tu perfil</label><select name="dog_id" id="v55DogSelect"><option value="">Cargando perros...</option></select><label>Observaciones</label><textarea name="notes" maxlength="1000"></textarea><button>Enviar solicitud de traslado</button>';const msg=document.createElement('div');msg.className='v55-status';msg.setAttribute('role','status');f.append(msg);f.onsubmit=async e=>{e.preventDefault();const btn=f.querySelector('button');btn.disabled=true;try{const {db,user}=await v55Auth(),v=Object.fromEntries(new FormData(f));let table,record;if(mode==='driver'){table='v55_drivers';record={user_id:user.id,sector:v.sector,vehicle_type:v.vehicle_type,dog_capacity:Number(v.dog_capacity),notes:v.notes,status:'pending_review'}}else{table='v55_trip_requests';record={user_id:user.id,origin_sector:v.origin_sector,destination_sector:v.destination_sector,requested_at:new Date(v.requested_at).toISOString(),dog_id:v.dog_id||null,notes:v.notes,status:'requested'}}const {error}=await db.from(table).insert(record);if(error)throw error;msg.textContent='Solicitud registrada. Pendiente de revisión; no se ha efectuado ningún cobro.';f.reset()}catch(err){msg.textContent='No se pudo registrar: '+err.message}finally{btn.disabled=false}};root.append(f);if(mode==='trip')v55LoadDogs()}
+function v55SwitchTransport(mode){const root=document.getElementById('v55TransportForm');if(!root)return;root.replaceChildren();const title=document.createElement('h2');title.textContent=mode==='driver'?'Inscripción de conductor':'Solicitud de traslado';root.append(title);const f=document.createElement('form');f.innerHTML=mode==='driver'?'<label>Sector de cobertura</label><input name="sector" required maxlength="100"><label>Tipo de vehículo</label><input name="vehicle_type" required maxlength="100"><label>Capacidad máxima de perros</label><input name="dog_capacity" type="number" min="1" max="20" required><label>Descripción del espacio para mascotas</label><textarea name="notes" required maxlength="1000"></textarea><button>Solicitar inscripción</button>':v63DogWarningHtml() + '<label>Sector de origen</label><input name="origin_sector" required maxlength="120"><label>Sector de destino</label><input name="destination_sector" required maxlength="120"><label>Fecha y hora deseada</label><input name="requested_at" type="datetime-local" required><label>Perros de tu perfil</label><select name="dog_id" id="v55DogSelect"><option value="">Cargando perros...</option></select><label>Observaciones</label><textarea name="notes" maxlength="1000"></textarea><button>Enviar solicitud de traslado</button>';const msg=document.createElement('div');msg.className='v55-status';msg.setAttribute('role','status');f.append(msg);f.onsubmit=async e=>{e.preventDefault();const btn=f.querySelector('button');btn.disabled=true;try{const {db,user}=await v55Auth(),v=Object.fromEntries(new FormData(f));let table,record;if(mode==='driver'){table='v55_drivers';record={user_id:user.id,sector:v.sector,vehicle_type:v.vehicle_type,dog_capacity:Number(v.dog_capacity),notes:v.notes,status:'pending_review'}}else{table='v55_trip_requests';record={user_id:user.id,origin_sector:v.origin_sector,destination_sector:v.destination_sector,requested_at:new Date(v.requested_at).toISOString(),dog_id:v.dog_id||null,notes:v.notes,status:'requested'}}const {error}=await db.from(table).insert(record);if(error)throw error;msg.textContent='Solicitud registrada. Pendiente de revisión; no se ha efectuado ningún cobro.';f.reset()}catch(err){msg.textContent='No se pudo registrar: '+err.message}finally{btn.disabled=false}};root.append(f);if(mode==='trip')v55LoadDogs()}
 async function v55LoadDogs(){const el=document.getElementById('v55DogSelect');try{const {db,user}=await v55Auth();const {data,error}=await db.from('dogs').select('id,name').eq('owner_id',user.id);if(error)throw error;el.replaceChildren();const opt=document.createElement('option');opt.value='';opt.textContent='Sin seleccionar (solo primera reserva o viaje)';el.append(opt);for(const d of data||[]){const o=document.createElement('option');o.value=d.id;o.textContent=d.name;el.append(o)}if(!data?.length)el.options[0].text='Primer servicio: puedes continuar sin ficha'}catch(e){el.options[0].text='Inicia sesión y registra tus perros'}}
 async function v55LoadProfessionals(){const el=document.getElementById('v55Professionals');el.textContent='Buscando profesionales aprobados...';try{const db=v55Db();const {data,error}=await db.from('v55_professionals').select('display_name,service_type,sector,base_price,description').eq('status','approved').limit(100);if(error)throw error;el.replaceChildren();if(!data?.length){el.textContent='Todavía no hay profesionales aprobados en este sector.';return}for(const p of data){const div=document.createElement('div');div.className='v55-result';const title=document.createElement('strong');title.textContent=p.display_name;div.append(title,document.createTextNode(' · '+p.service_type+' · '+p.sector+' · $'+Number(p.base_price).toLocaleString('es-CL')+' CLP'));el.append(div)}}catch(e){el.textContent='No se pudo consultar profesionales: '+e.message}}
 async function v55RegisterPro(e){e.preventDefault();const f=e.currentTarget,btn=f.querySelector('button'),status=document.getElementById('v55ProStatus');btn.disabled=true;try{const {db,user}=await v55Auth(),v=Object.fromEntries(new FormData(f));const {error}=await db.from('v55_professionals').insert({user_id:user.id,service_type:v.service_type,display_name:v.display_name,sector:v.sector,base_price:Number(v.base_price),description:v.description,status:'pending_review'});if(error)throw error;status.textContent='Inscripción recibida. Tu perfil se publicará solo después de la revisión de VAPA.';f.reset()}catch(err){status.textContent='No se pudo inscribir: '+err.message}finally{btn.disabled=false}}
@@ -2350,11 +2409,45 @@ document.getElementById('v60Inbox')?.addEventListener('click',e=>{const b=e.targ
 </script>
 
 <script>
-async function v61LoadDriverTrips(){const box=document.getElementById('v61DriverTrips');if(!box)return;try{const {db,user}=await v55Auth();const {data:drivers,error:de}=await db.from('v55_drivers').select('id').eq('user_id',user.id).eq('status','approved');if(de)throw de;if(!drivers?.length){box.textContent='Para recibir viajes debes estar aprobado como conductor.';return}const {data,error}=await db.from('v55_trip_requests').select('id,origin_sector,destination_sector,requested_at,status,assigned_driver_id').in('assigned_driver_id',drivers.map(d=>d.id)).eq('status','driver_pending');if(error)throw error;box.innerHTML='<h3>Viajes pendientes de tu respuesta</h3>'+(data.length?data.map(t=>'<div class="v55-result">'+v60Escape(t.origin_sector)+' → '+v60Escape(t.destination_sector)+' · '+v60Escape(new Date(t.requested_at).toLocaleString('es-CL'))+'<div><button onclick="v61DriverReply(''+t.id+'',true)">Aceptar</button> <button onclick="v61DriverReply(''+t.id+'',false)">Rechazar</button></div></div>').join(''):'<p>No tienes viajes pendientes.</p>')}catch(e){box.textContent='Viajes asignados: '+e.message}}
+async function v61LoadDriverTrips(){const box=document.getElementById('v61DriverTrips');if(!box)return;try{const {db,user}=await v55Auth();const {data:drivers,error:de}=await db.from('v55_drivers').select('id').eq('user_id',user.id).eq('status','approved');if(de)throw de;if(!drivers?.length){box.textContent='Para recibir viajes debes estar aprobado como conductor.';return}const {data,error}=await db.from('v55_trip_requests').select('id,origin_sector,destination_sector,requested_at,status,assigned_driver_id').in('assigned_driver_id',drivers.map(d=>d.id)).eq('status','driver_pending');if(error)throw error;box.innerHTML='<h3>Viajes pendientes de tu respuesta</h3>'+(data.length?data.map(t=>'<div class="v55-result">'+v60Escape(t.origin_sector)+' → '+v60Escape(t.destination_sector)+' · '+v60Escape(new Date(t.requested_at).toLocaleString('es-CL'))+'<div><button onclick="v61DriverReply(\''+t.id+'\',true)">Aceptar</button> <button onclick="v61DriverReply(\''+t.id+'\',false)">Rechazar</button></div></div>').join(''):'<p>No tienes viajes pendientes.</p>')}catch(e){box.textContent='Viajes asignados: '+e.message}}
 async function v61DriverReply(id,accept){try{const {db}=await v55Auth();const {error}=await db.rpc('v61_driver_respond',{p_trip:id,p_accept:accept});if(error)throw error;alert(accept?'Aceptación registrada. VAPA debe confirmar el pago y la reserva.':'Viaje devuelto a administración.');v61LoadDriverTrips()}catch(e){alert(e.message)}}
-async function v61LoadAssignment(){const el=document.getElementById('v61Assignment');if(!el)return;try{const {db}=await v55Auth();const [{data:drivers,error:e1},{data:trips,error:e2}]=await Promise.all([db.from('v55_drivers').select('id,sector,vehicle_type').eq('status','approved'),db.from('v55_trip_requests').select('id,origin_sector,destination_sector,status,assigned_driver_id').in('status',['requested','reviewing','approved','driver_pending','driver_accepted'])]);if(e1||e2)throw e1||e2;el.innerHTML='<h3>Asignación de viajes a conductores</h3>'+(trips.length?trips.map(t=>'<div class="v55-result"><strong>'+v60Escape(t.origin_sector)+' → '+v60Escape(t.destination_sector)+'</strong> · '+v60Escape(t.status)+(t.status==='driver_accepted'?' · Conductor aceptó; pago aún no verificado':('<div><select id="v61-driver-'+t.id+'"><option value="">Seleccionar conductor aprobado</option>'+drivers.map(d=>'<option value="'+d.id+'" '+(d.id===t.assigned_driver_id?'selected':'')+'>'+v60Escape(d.sector+' · '+d.vehicle_type)+'</option>').join('')+'</select> <button onclick="v61Assign(''+t.id+'')">Enviar al conductor</button></div>'))+'</div>').join(''):'<p>No hay viajes activos.</p>')}catch(e){el.textContent='Asignaciones: '+e.message}}
+async function v61LoadAssignment(){const el=document.getElementById('v61Assignment');if(!el)return;try{const {db}=await v55Auth();const [{data:drivers,error:e1},{data:trips,error:e2}]=await Promise.all([db.from('v55_drivers').select('id,sector,vehicle_type').eq('status','approved'),db.from('v55_trip_requests').select('id,origin_sector,destination_sector,status,assigned_driver_id').in('status',['requested','reviewing','approved','driver_pending','driver_accepted'])]);if(e1||e2)throw e1||e2;el.innerHTML='<h3>Asignación de viajes a conductores</h3>'+(trips.length?trips.map(t=>'<div class="v55-result"><strong>'+v60Escape(t.origin_sector)+' → '+v60Escape(t.destination_sector)+'</strong> · '+v60Escape(t.status)+(t.status==='driver_accepted'?' · Conductor aceptó; pago aún no verificado':('<div><select id="v61-driver-'+t.id+'"><option value="">Seleccionar conductor aprobado</option>'+drivers.map(d=>'<option value="'+d.id+'" '+(d.id===t.assigned_driver_id?'selected':'')+'>'+v60Escape(d.sector+' · '+d.vehicle_type)+'</option>').join('')+'</select> <button onclick="v61Assign(\''+t.id+'\')">Enviar al conductor</button></div>'))+'</div>').join(''):'<p>No hay viajes activos.</p>')}catch(e){el.textContent='Asignaciones: '+e.message}}
 async function v61Assign(id){const driver=document.getElementById('v61-driver-'+id)?.value;if(!driver)return alert('Selecciona un conductor aprobado.');if(!confirm('¿Enviar esta solicitud al conductor? Todavía no se realizará ningún cobro.'))return;try{const {db}=await v55Auth();const {error}=await db.rpc('v61_assign_driver',{p_trip:id,p_driver:driver});if(error)throw error;await v61LoadAssignment();alert('Viaje asignado. El conductor podrá aceptarlo al ingresar a VAPA.')}catch(e){alert(e.message)}}
 const v61OldLoadInbox=window.v60LoadInbox;window.v60LoadInbox=async function(){await v61OldLoadInbox();await v61LoadAssignment()};
 </script>
 <script src="google-v65.js" defer></script>
+<script id="v67-active-mobile-menu">
+(function(){
+  const navSelector='.mobile-bottom-nav.v43-four-nav';
+  const routeMap={v55MapPage:3,myDogs:4,v55ServicesPage:5,v55TransportPage:6,
+    guestDashboard:0,publicCatalog:0,publicCasaMila:0,v41PropertyDetail:0,
+    hostDashboard:1,v43AgentPanel:2};
+  function update(){
+    const nav=document.querySelector(navSelector);if(!nav)return;
+    const active=document.querySelector('.page.active');
+    if(!active)return;
+    const index=routeMap[active.id];
+    if(index===undefined)return;
+    const buttons=[...nav.querySelectorAll('button')];
+    buttons.forEach((button,i)=>{
+      if(i===index){button.setAttribute('aria-current','page');button.setAttribute('aria-pressed','true')}
+      else{button.removeAttribute('aria-current');button.setAttribute('aria-pressed','false')}
+    });
+    const selected=buttons[index];
+    if(selected && window.innerWidth<=800 && selected.offsetWidth){
+      const n=nav.getBoundingClientRect(),b=selected.getBoundingClientRect();
+      if(b.left<n.left+4||b.right>n.right-4)selected.scrollIntoView({block:'nearest',inline:'nearest',behavior:'smooth'});
+    }
+  }
+  function init(){
+    const main=document.querySelector('main');if(!main)return;
+    let pending=false;
+    const observer=new MutationObserver(()=>{if(pending)return;pending=true;queueMicrotask(()=>{pending=false;update()})});
+    observer.observe(main,{attributes:true,attributeFilter:['class'],subtree:true});
+    document.querySelector(navSelector)?.addEventListener('click',()=>setTimeout(update,0));
+    update();
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
 </body></html>
