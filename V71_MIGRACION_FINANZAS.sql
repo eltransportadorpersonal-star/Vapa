@@ -1,0 +1,11 @@
+-- Ejecutar en Supabase SQL Editor. Rangos promocionales se asignan tras comprobar orden real de aprobación.
+ALTER TABLE public.properties ADD COLUMN IF NOT EXISTS v71_approved_at timestamptz;
+ALTER TABLE public.properties ADD COLUMN IF NOT EXISTS v71_promo_rank integer CHECK (v71_promo_rank BETWEEN 1 AND 5);
+CREATE UNIQUE INDEX IF NOT EXISTS v71_promo_rank_unique ON public.properties(v71_promo_rank) WHERE v71_promo_rank IS NOT NULL;
+CREATE OR REPLACE FUNCTION public.v71_property_split(p_property uuid,p_gross integer,p_at timestamptz DEFAULT now()) RETURNS TABLE(owner_amount integer,vapa_amount integer,agent_pool integer,promo_active boolean) LANGUAGE plpgsql STABLE AS $$ DECLARE r record; fee integer; BEGIN IF p_gross IS NULL OR p_gross<0 THEN RAISE EXCEPTION 'Monto inválido'; END IF; SELECT v71_approved_at,v71_promo_rank INTO r FROM public.properties WHERE id=p_property; IF NOT FOUND THEN RAISE EXCEPTION 'Propiedad inexistente'; END IF; promo_active:=r.v71_promo_rank IS NOT NULL AND r.v71_approved_at IS NOT NULL AND p_at>=r.v71_approved_at AND p_at<r.v71_approved_at+interval '60 days'; fee:=CASE WHEN promo_active THEN 0 ELSE round(p_gross*.20)::integer END; owner_amount:=p_gross-fee;vapa_amount:=fee;agent_pool:=round(fee*.5)::integer;RETURN NEXT;END $$;
+CREATE TABLE IF NOT EXISTS public.v71_earnings(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),beneficiary_user_id uuid NOT NULL REFERENCES auth.users(id),service_type text NOT NULL CHECK(service_type IN ('property','transport','professional')),source_id uuid NOT NULL,gross_amount integer NOT NULL CHECK(gross_amount>=0),platform_fee integer NOT NULL CHECK(platform_fee>=0),agent_fee integer NOT NULL DEFAULT 0 CHECK(agent_fee>=0),beneficiary_amount integer NOT NULL CHECK(beneficiary_amount>=0),settlement_status text NOT NULL DEFAULT 'pending' CHECK(settlement_status IN ('pending','available','paid','refunded')),created_at timestamptz NOT NULL DEFAULT now(),UNIQUE(beneficiary_user_id,service_type,source_id));
+ALTER TABLE public.v71_earnings ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.v71_earnings FROM anon,authenticated;
+GRANT SELECT ON public.v71_earnings TO authenticated;
+DROP POLICY IF EXISTS v71_earnings_read ON public.v71_earnings;
+CREATE POLICY v71_earnings_read ON public.v71_earnings FOR SELECT TO authenticated USING(beneficiary_user_id=auth.uid() OR public.is_admin());

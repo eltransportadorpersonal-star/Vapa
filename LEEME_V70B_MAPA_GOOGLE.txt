@@ -1,0 +1,1 @@
+V70B: Mapa general Google Maps se inicializa al abrir Mapa aunque falle Supabase o no existan pines. Conserva funciones Netlify y tarifario original. Publicar en VAPA oficial solo tras respaldo y verificación de despliegue. Pines requieren map_lat/map_lng válidos. No modifica base de datos.
