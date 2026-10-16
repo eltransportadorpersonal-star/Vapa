@@ -2406,7 +2406,38 @@ async function v55Auth(){const db=v55Db();if(!db)throw Error('No hay conexión c
 function v55Text(node,str){node.textContent=String(str??'')}
 async function v55LoadMap(){const status=document.getElementById('v55MapStatus');v55Text(status,'Cargando propiedades...');try{const db=v55Db();if(!db)throw Error('No hay conexión con Supabase');const {data,error}=await db.from('properties').select('id,name,comuna,address,status,map_lat,map_lng,has_pool').limit(500);if(error)throw error;v55Properties=(data||[]).filter(p=>['published','approved','active'].includes(String(p.status).toLowerCase()));try{const dr=await db.from('v55_drivers').select('id,sector,map_lat,map_lng,vehicle_type,dog_capacity,status').eq('status','approved').limit(500);v57Drivers=dr.error?[]:(dr.data||[])}catch(e){v57Drivers=[]}v55RenderMapList()}catch(e){v55Text(status,'No se pudo consultar el mapa: '+e.message+'; ejecuta primero V55_FASE1_SUPABASE.sql')}}
 function v55RenderMapList(){const q=(document.getElementById('v55Sector').value||'').trim().toLowerCase(),pool=document.getElementById('v55Pool').value;const items=v55Properties.filter(p=>(!q||[p.comuna,p.name].some(v=>String(v||'').toLowerCase().includes(q)))&&(pool!=='yes'||p.has_pool===true));const type=document.getElementById('v57MapType')?.value||'all';const drivers=v57Drivers.filter(d=>!q||String(d.sector||'').toLowerCase().includes(q));const list=document.getElementById('v55MapList');list.replaceChildren();for(const p of (type==='drivers'?[]:items)){const row=document.createElement('div');row.className='v55-result';const name=document.createElement('strong');v55Text(name,p.name);row.append(name,document.createTextNode(' · '+(p.comuna||'Sector por confirmar')+' '));const b=document.createElement('button');b.textContent='Ver propiedad';b.onclick=()=>{go('publicCatalog')};row.append(b);list.append(row)}for(const d of (type==='properties'?[]:drivers)){const row=document.createElement('div');row.className='v55-result';const strong=document.createElement('strong');strong.textContent='🐕 Transporte disponible · '+d.sector;row.append(strong,document.createTextNode(' · '+d.vehicle_type+' · hasta '+d.dog_capacity+' perros '));const btn=document.createElement('button');btn.textContent='Cotizar traslado';btn.onclick=()=>go('v55TransportPage');row.append(btn);list.append(row)}v55Text(document.getElementById('v55MapStatus'),items.length+' propiedades publicadas en el listado · '+items.filter(p=>Number.isFinite(Number(p.map_lat))&&Number.isFinite(Number(p.map_lng))&&p.map_lat!=null&&p.map_lng!=null).length+' con pin · '+drivers.length+' transportistas aprobados');v55DrawMap(type==='drivers'?[]:items,type==='properties'?[]:drivers)}
-function v55DrawMap(items,drivers=[]){const el=document.getElementById('v55Map');if(!window.L){el.textContent='El mapa requiere conexión para cargar OpenStreetMap. Puedes consultar el listado de propiedades.';if(!document.getElementById('v55-leaflet')){const css=document.createElement('link');css.rel='stylesheet';css.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';document.head.append(css);const sc=document.createElement('script');sc.id='v55-leaflet';sc.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';sc.onload=()=>v55DrawMap(items);document.head.append(sc)}return}if(!v55Map){el.textContent='';v55Map=L.map(el).setView([-33.45,-70.65],10);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:18}).addTo(v55Map)}v55Markers.forEach(m=>v55Map.removeLayer(m));v55Markers=[];for(const p of items){const lat=Number(p.map_lat),lng=Number(p.map_lng);if(p.map_lat==null||p.map_lng==null||!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180)continue;const m=L.marker([lat,lng]).addTo(v55Map);const box=document.createElement('div');const title=document.createElement('strong');title.textContent=p.name;const sub=document.createElement('div');sub.textContent=p.comuna||'';box.append(title,sub);m.bindPopup(box);v55Markers.push(m)}for(const d of drivers){const lat=Number(d.map_lat),lng=Number(d.map_lng);if(d.map_lat==null||d.map_lng==null||!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180)continue;const marker=L.circleMarker([lat,lng],{radius:10,color:'#167e83',fillColor:'#22b5ac',fillOpacity:.85}).addTo(v55Map);const popup=document.createElement('div');const name=document.createElement('strong');name.textContent='Transporte VAPA · '+d.sector;const desc=document.createElement('p');desc.textContent=d.vehicle_type+' · Capacidad: '+d.dog_capacity+' perros';const btn=document.createElement('button');btn.textContent='Cotizar traslado';btn.onclick=()=>go('v55TransportPage');popup.append(name,desc,btn);marker.bindPopup(popup);v55Markers.push(marker)}if(v55Markers.length){const bounds=L.featureGroup(v55Markers).getBounds();v55Map.fitBounds(bounds.pad(.2),{maxZoom:12})}setTimeout(()=>v55Map.invalidateSize(),100)}
+function v55DrawMap(items,drivers=[]){
+ const el=document.getElementById('v55Map');
+ if(!el)return;
+ if(!window.google?.maps?.Map){
+   el.textContent='Cargando Google Maps para mostrar las propiedades…';
+   return;
+ }
+ if(!v55Map){
+   el.textContent='';
+   v55Map=new google.maps.Map(el,{center:{lat:-33.45,lng:-70.65},zoom:10,mapTypeControl:false,streetViewControl:false});
+ }
+ v55Markers.forEach(m=>m.setMap(null));v55Markers=[];
+ const bounds=new google.maps.LatLngBounds();
+ const addPin=(lat,lng,title,detail,kind)=>{
+   if(!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180)return;
+   const position={lat,lng};
+   const marker=new google.maps.Marker({map:v55Map,position,title,icon:kind==='driver'?{path:google.maps.SymbolPath.CIRCLE,scale:10,fillColor:'#167e83',fillOpacity:1,strokeColor:'#ffffff',strokeWeight:2}:undefined});
+   const info=document.createElement('div');const heading=document.createElement('strong');heading.textContent=title;
+   const sub=document.createElement('p');sub.textContent=detail||'';info.append(heading,sub);
+   if(kind==='driver'){const btn=document.createElement('button');btn.type='button';btn.textContent='Cotizar traslado';btn.addEventListener('click',()=>go('v55TransportPage'));info.append(btn)}
+   const popup=new google.maps.InfoWindow({content:info});marker.addListener('click',()=>popup.open({map:v55Map,anchor:marker}));
+   v55Markers.push(marker);bounds.extend(position);
+ };
+ for(const p of items){if(p.map_lat==null||p.map_lng==null)continue;addPin(Number(p.map_lat),Number(p.map_lng),p.name,p.comuna||'', 'property')}
+ for(const d of drivers){if(d.map_lat==null||d.map_lng==null)continue;addPin(Number(d.map_lat),Number(d.map_lng),'Transporte VAPA · '+(d.sector||''),(d.vehicle_type||'')+' · hasta '+(d.dog_capacity||'?')+' perros','driver')}
+ if(v55Markers.length)v55Map.fitBounds(bounds,64);
+ else v55Map.setCenter({lat:-33.45,lng:-70.65});
+}
+window.addEventListener('vapa-maps-ready',()=>{
+ const page=document.getElementById('v55MapPage');
+ if(page?.classList.contains('active'))v55RenderMapList();
+});
 let v56Quote=null,v56Timer=null,v56Seq=0,v56RouteMap=null,v56RouteLine=null,v56RouteMarkers=[];
 function v55ToggleC(){const checked=document.getElementById('v55HasC').checked;document.getElementById('v55StopCWrap').hidden=!checked;v56ScheduleQuote()}
 // V64: sugerencias reales de direcciones. No usar Nominatim público para autocompletar.

@@ -1,0 +1,11 @@
+VAPA V70 - Google Maps
+
+Cambios:
+1. Corrige radio de sugerencias de direcciones de 65000 a 45000 metros.
+2. Usa Google Maps en el modulo Mapa de propiedades, mostrando pines de propiedades publicadas con coordenadas map_lat/map_lng y conductores aprobados con coordenadas.
+3. Mantiene ruta A-B con parada C opcional y calculo de tarifa al seleccionar sugerencias verificadas.
+4. Conserva el menu superior de seis modulos y los cambios de V69.
+
+Publicacion: subir index.html y google-v65.js a la raiz del repositorio GitHub Vapa, sin borrar otros archivos. Netlify publica automaticamente.
+
+Notas: no se inventan coordenadas. Si las propiedades no tienen map_lat/map_lng, no apareceran pines. Las rutas requieren que Google Directions este habilitado en la clave.
