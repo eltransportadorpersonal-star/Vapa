@@ -1,0 +1,54 @@
+VAPA V73 - PREPARACION SEGURA MARKETPLACE (STAGING)
+Fecha: 17-10-2026
+
+Este paquete NO activa Split de Pagos ni cambia la aplicación de Mercado Pago.
+Incluye los 79 archivos de V72F sin cambios, excepto una corrección en
+supabase/functions/mp-create-checkout/index.ts: fallback SITE_ORIGIN apunta
+ahora a https://vapa.netlify.app en lugar de https://vapa1.netlify.app.
+
+Hallazgos comprobados:
+1. mp-create-checkout usa MP_ACCESS_TOKEN único y crea preferencias sin
+   marketplace_fee ni token OAuth del vendedor. NO hace Split.
+2. mp-webhook consulta pagos con ese mismo token y marca reservas pagadas.
+3. Reservas usan reservations.property_id; properties.owner_id identifica al
+   dueño. Debe verificarse su vínculo antes de usar tokens de vendedor.
+4. La nueva app Mercado Pago es 6272304973024344, Checkout Pro API Preferencias.
+   No se ha confirmado habilitación Marketplace ni compatibilidad efectiva.
+
+ANTES DE ACTIVAR SPLIT:
+- Confirmar modelo Marketplace y habilitación de Split 1:1 en Mercado Pago Chile.
+- Implementar OAuth con state aleatorio, expiración, protección CSRF, callback
+  exacto, intercambio de código en servidor y almacenamiento cifrado de tokens.
+- Nunca poner client_secret, access_token o refresh_token en JS/HTML ni GitHub.
+- Implementar renovación de credenciales y desconexión/revocación.
+- Crear preferencia con token del propietario y marketplace_fee según reglas
+  vigentes, verificando cuenta vinculada, propiedad, reserva, comisión y moneda.
+- Verificar webhooks con credenciales correctas del vendedor, idempotencia,
+  firma, receptor, monto, reserva y reembolsos; conciliación y promociones.
+- Definir tratamiento de 0% promocional para los primeros 20 propietarios durante 60 días,
+  15% normal y gastos de procesamiento.
+- Probar con cuentas de prueba y sandbox antes de producción.
+
+NO ejecutar SQL ni modificar variables de entorno por este paquete.
+NO fusionar desarrollo-v73 con main sin pruebas.
+
+REGLA COMERCIAL ACTUALIZADA (17-10-2026):
+- Comisión VAPA por reservas de propiedades: 15% del importe elegible.
+- Los primeros 20 propietarios elegibles reciben 60 días de comisión VAPA 0%.
+- Fuera de promoción, la participación base del propietario es 85%,
+  antes de comisiones de procesamiento, ajustes y reembolsos.
+- La promoción se asigna por propietario, no por propiedad ni reserva.
+- CONFIRMADO: los 60 días empiezan cuando la primera propiedad del propietario
+  queda APROBADA Y PUBLICADA por VAPA (no al registrarse ni al solicitar publicación).
+- Los primeros 20 propietarios elegibles se determinan por orden cronológico
+  de primera aprobación y publicación efectiva; asignación única por propietario.
+- Para eventos simultáneos, usar orden de confirmación persistido en backend
+  con operación transaccional; evitar otorgar más de 20 beneficios.
+- No activar lógica automática hasta definir esas reglas y persistir
+  asignación en backend, sin confiar en fechas manipulables por clientes.
+- Esta actualización es DOCUMENTAL: no cambia cobros en producción.
+
+PRECISION DE FECHAS: almacenar first_published_at en UTC, y promo_ends_at
+como first_published_at + 60 dias calendario completos. La comision 0% aplica
+a reservas cuyo cobro se cree antes de promo_ends_at, sujeto a politica de
+reservas definida; fijar comision en servidor por transaccion.

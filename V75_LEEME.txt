@@ -1,0 +1,7 @@
+VAPA V75 STAGING - CONFIRMACION DE TRANSPORTE
+
+1. Publicar solo en rama de desarrollo.
+2. Ejecutar V75_MIGRACION_CONFIRMACION_TRANSPORTE.sql en Supabase (después de V61).
+3. Probar pasajero crea solicitud, admin asigna, conductor acepta, llama y confirma direcciones, pasajero confirma.
+4. NO COBRA NI REPARTE DINERO. Mercado Pago Split, OAuth, pricing validado en servidor y webhooks todavía pendientes.
+5. No activar cobros reales hasta completar pruebas y verificación comercial de MP.
