@@ -1,0 +1,1 @@
+V72E staging: botón persistente Iniciar sesión / Cerrar sesión, según sesión real de Supabase. Google continúa como acceso principal. No modifica la lógica de pagos; transporte sin checkout sigue bloqueado. Probar antes de producción.

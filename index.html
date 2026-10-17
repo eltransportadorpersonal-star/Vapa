@@ -611,7 +611,12 @@ body:has(#v55ServicesPage.active) > #v53MobileQuick { display:none !important; }
 #v37Editor .real-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr))}
 #v37Editor button{min-height:44px}
 @media(max-width:650px){#v37Editor{padding:16px!important;margin:12px auto!important}#v37Editor .real-grid{display:grid;grid-template-columns:1fr!important}#v37ExistingPhotos img{max-width:100%}}
-</style><style>#v72OtherAuth[hidden]{display:none!important}</style></head><body>
+</style><style>#v72OtherAuth[hidden]{display:none!important}</style><style id="v72eSessionStyle">
+#v72eSessionControl{position:fixed;right:14px;top:72px;z-index:2147482000;display:flex;gap:8px;align-items:center;pointer-events:auto}
+#v72eSessionControl button{font:600 14px/1.2 system-ui,sans-serif;border:1px solid #b8d3c8;border-radius:999px;padding:11px 15px;min-height:44px;box-shadow:0 2px 12px #0002;cursor:pointer;background:#fff;color:#124a3d}
+#v72eSessionControl button[data-state="out"]{background:#124a3d;color:white;border-color:#124a3d}
+@media(max-width:700px){#v72eSessionControl{top:env(safe-area-inset-top, 0px);right:8px;transform:translateY(8px)}#v72eSessionControl button{font-size:12px;padding:9px 12px;min-height:40px}}
+</style></head><body>
 <div class="mobile-topbar">
   <button type="button" class="mobile-logo v72-home-logo" onclick="v72Home()" aria-label="VAPA: volver al inicio">VAPA</button>
   <button type="button" class="v58-reservas-header" onclick="go('v52OwnerApprovals')" aria-label="Ver reservas"><span aria-hidden="true">▣</span> Reservas</button>
@@ -2568,7 +2573,35 @@ const v61OldLoadInbox=window.v60LoadInbox;window.v60LoadInbox=async function(){a
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>
-</body></html>
+<div id="v72eSessionControl"><button type="button" id="v72eSessionButton" data-state="out" onclick="v72eSessionClick()">Iniciar sesión</button></div>
+<script>
+(function(){
+ let loggedIn=false;
+ function paint(user){loggedIn=!!user;const b=document.getElementById('v72eSessionButton');if(!b)return;b.textContent=loggedIn?'Cerrar sesión':'Iniciar sesión';b.dataset.state=loggedIn?'in':'out';b.setAttribute('aria-label',b.textContent)}
+ window.v72eSessionClick=async function(){
+  const b=document.getElementById('v72eSessionButton');if(b)b.disabled=true;
+  try{
+   const db=typeof vapaDb==='function'?vapaDb():null;
+   if(!db){alert('No se pudo conectar con Supabase.');return}
+   const {data:{session},error}=await db.auth.getSession();if(error)throw error;
+   if(session?.user){
+    const {error:signoutError}=await db.auth.signOut();if(signoutError)throw signoutError;
+    localStorage.removeItem('vapaUser');localStorage.removeItem('vapaRole');
+    if(typeof updateAuthUI==='function')updateAuthUI(null);
+    if(typeof v35AdminUI==='function')v35AdminUI(null);
+    if(typeof closeTopAccountMenu==='function')closeTopAccountMenu();
+    paint(null);window.scrollTo({top:0,behavior:'smooth'});
+   }else{if(typeof openAuth==='function')openAuth();else alert('No se encontró el formulario de acceso')}
+  }catch(e){alert('No se pudo cambiar la sesión: '+e.message)}finally{if(b)b.disabled=false}
+ };
+ document.addEventListener('DOMContentLoaded',async()=>{
+  const db=typeof vapaDb==='function'?vapaDb():null;
+  if(!db)return paint(null);
+  try{const {data:{session}}=await db.auth.getSession();paint(session?.user||null)}catch(e){paint(null)}
+  db.auth.onAuthStateChange((_event,session)=>paint(session?.user||null));
+ });
+})();
+</script></body></html>
 <script>
 function v72Home(){
  const editor=document.getElementById('v37Editor');if(editor&&!editor.hidden&&typeof v37Close==='function')v37Close();
