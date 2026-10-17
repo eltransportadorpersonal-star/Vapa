@@ -603,9 +603,17 @@ body:has(#v55ServicesPage.active) > #v53MobileQuick { display:none !important; }
  main{padding-top:72px!important;padding-bottom:calc(92px + env(safe-area-inset-bottom))!important}
 }
 </style>
-</head><body>
+<style>
+.v72-home-logo{background:transparent;border:0;color:inherit;font:inherit;cursor:pointer;padding:0;text-align:left}
+#v37Editor{box-sizing:border-box;width:calc(100% - 24px);max-width:900px;overflow-wrap:anywhere}
+#v37Editor input,#v37Editor textarea,#v37Editor button{max-width:100%;box-sizing:border-box}
+#v37Editor input,#v37Editor textarea{font-size:16px;width:100%}
+#v37Editor .real-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr))}
+#v37Editor button{min-height:44px}
+@media(max-width:650px){#v37Editor{padding:16px!important;margin:12px auto!important}#v37Editor .real-grid{display:grid;grid-template-columns:1fr!important}#v37ExistingPhotos img{max-width:100%}}
+</style></head><body>
 <div class="mobile-topbar">
-  <div class="mobile-logo">VAPA</div>
+  <button type="button" class="mobile-logo v72-home-logo" onclick="v72Home()" aria-label="VAPA: volver al inicio">VAPA</button>
   <button type="button" class="v58-reservas-header" onclick="go('v52OwnerApprovals')" aria-label="Ver reservas"><span aria-hidden="true">▣</span> Reservas</button>
 </div>
 <nav class="mobile-bottom-nav v43-four-nav" aria-label="Navegación principal VAPA">
@@ -1711,7 +1719,7 @@ async function loadAdminProperties(status='pending_review'){
  const {data,error}=await db.from('properties').select('*,property_photos(url)').eq('status',status).order('created_at',{ascending:false});
  if(error){box.innerHTML='<div class="real-empty">'+error.message+'</div>';return}
  if(!data.length){box.innerHTML='<div class="real-empty">No hay propiedades en este estado.</div>';return}
- box.innerHTML=data.map(p=>`<article class="admin-property-card"><img src="${p.property_photos?.[0]?.url||'assets/perros-parque.jpg'}"><div><h3>${p.name}</h3><p>${p.commune} · ${p.sqm||'-'} m² · $${Number(p.price_per_person||0).toLocaleString('es-CL')} / persona</p><p>${p.description||''}</p><strong>Estado: ${p.status}</strong></div><div class="admin-actions"><button class="approve" onclick="reviewProperty('${p.id}','published')">Aprobar y publicar</button><button class="changes" onclick="reviewProperty('${p.id}','changes_requested')">Solicitar cambios</button><button class="reject" onclick="reviewProperty('${p.id}','rejected')">Rechazar</button></div></article>`).join('');
+ box.innerHTML=data.map(p=>`<article class="admin-property-card"><img src="${p.property_photos?.[0]?.url||'assets/perros-parque.jpg'}"><div><h3>${p.name}</h3><p>${p.commune} · ${p.sqm||'-'} m² · $${Number(p.price_per_person||0).toLocaleString('es-CL')} / persona</p><p>${p.description||''}</p><strong>Estado: ${p.status}</strong></div><div class="admin-actions"><button type="button" onclick="v72AdminEdit('${p.id}')">Editar propiedad</button><button class="approve" onclick="reviewProperty('${p.id}','published')">Aprobar y publicar</button><button class="changes" onclick="reviewProperty('${p.id}','changes_requested')">Solicitar cambios</button><button class="reject" onclick="reviewProperty('${p.id}','rejected')">Rechazar</button></div></article>`).join('');
 }
 async function reviewProperty(id,status){
  const db=vapaDb(); if(!db)return;
@@ -1905,12 +1913,12 @@ document.addEventListener('DOMContentLoaded',async()=>{
 <section id="v37Editor" hidden style="max-width:900px;margin:24px auto;padding:24px;border:1px solid #cad8cf;border-radius:16px;background:#fff"><h2>Editar propiedad</h2><p>Al guardar, la propiedad publicada pasará a revisión. Se mantiene su registro original.</p><form id="v37EditForm" onsubmit="v37Save(event)"><div class="real-grid"><label>Nombre<input name="name" required></label><label>Comuna<input name="commune" required></label><label>Dirección<input name="address" required></label><label>Metros cuadrados<input name="sqm" type="number" min="1" required></label><label>Precio base por bloque de 90 minutos ($)<input name="price_per_person" type="number" min="0" required></label><label>Perro adicional por bloque ($)<input name="extra_dog_price" type="number" min="0" value="5000"></label><label>Recargo piscina por bloque ($)<input name="pool_price_per_block" type="number" min="0" value="6000"></label><label>Máximo de perros<input name="max_dogs" type="number" min="1" required></label></div><label>Descripción<textarea name="description" rows="4" required></textarea></label><h3>Fotos actuales</h3><div id="v37ExistingPhotos" style="display:flex;flex-wrap:wrap;gap:12px;margin:12px 0"></div><label>Reemplazar todas las fotografías (opcional)<input id="v37PhotoInput" type="file" accept="image/*" multiple></label><p style="font-size:13px">Si seleccionas nuevas fotos, reemplazarán la galería. La primera será la portada. Máximo 15 fotos de 10 MB cada una.</p><div id="v37EditorStatus" role="status"></div><button type="submit" class="real-submit">Guardar y enviar a revisión</button> <button type="button" onclick="v37Close()">Cancelar</button></form></section>
 <script>// V37: edición real de propiedades existentes. No se crea una propiedad nueva.
 let v37Current=null;
-async function v37EditProperty(id){
+async function v37EditProperty(id,asAdmin=false){
  const db=vapaDb();if(!db)return alert('Supabase no está configurado');
  const {data:{user}}=await db.auth.getUser();if(!user)return alert('Inicia sesión');
- const {data:p,error}=await db.from('properties').select('*,property_photos(id,url,sort_order)').eq('id',id).eq('owner_id',user.id).single();
+ let q=db.from('properties').select('*,property_photos(id,url,sort_order)').eq('id',id);if(!asAdmin)q=q.eq('owner_id',user.id);const {data:p,error}=await q.single();
  if(error||!p)return alert('No pudimos cargar tu propiedad: '+(error?.message||'Sin acceso'));
- v37Current=p;
+ v37Current=p;window.v72EditingAsAdmin=!!asAdmin;
  const modal=document.getElementById('v37Editor');modal.hidden=false;
  const form=document.getElementById('v37EditForm');
  for(const key of ['name','commune','address','sqm','price_per_person','max_dogs','extra_dog_price','pool_price_per_block','description'])form.elements[key].value=p[key]??'';
@@ -1929,7 +1937,7 @@ function v37RenderPhotos(){
   card.append(img,button);el.append(card);
  }
 }
-function v37Close(){document.getElementById('v37Editor').hidden=true;v37Current=null}
+function v37Close(){document.getElementById('v37Editor').hidden=true;v37Current=null;window.v72EditingAsAdmin=false}
 async function v37Save(e){
  e.preventDefault();const p=v37Current;if(!p)return;
  const form=e.target,button=form.querySelector('button[type=submit]'),status=document.getElementById('v37EditorStatus');
@@ -1937,6 +1945,7 @@ async function v37Save(e){
  button.disabled=true;status.textContent='Guardando cambios...';
  try{
   const newFiles=[...document.getElementById('v37PhotoInput').files];
+  if(window.v72EditingAsAdmin && newFiles.length)throw Error('Para cambiar fotos de otra persona se requiere configurar permisos de Storage; los demás campos sí pueden editarse.');
   if(newFiles.length>15)throw Error('Máximo 15 fotos');
   if(newFiles.some(f=>!f.type.startsWith('image/')||f.size>10*1024*1024))throw Error('Solo imágenes de hasta 10 MB cada una');
   let urls=[...(p.property_photos||[])].sort((a,b)=>a.sort_order-b.sort_order).map(x=>x.url);
@@ -1951,14 +1960,14 @@ async function v37Save(e){
    }
   }
   const v=n=>form.elements[n].value;
-  const {error}=await db.rpc('resubmit_owned_property',{
+  const {error}=await db.rpc(window.v72EditingAsAdmin?'v72_admin_update_property':'resubmit_owned_property',{
    p_id:p.id,p_name:v('name'),p_commune:v('commune'),p_address:v('address'),
    p_sqm:Number(v('sqm')),p_price_per_person:Number(v('price_per_person')),p_extra_dog_price:Number(v('extra_dog_price')),p_pool_price_per_block:Number(v('pool_price_per_block')),
    p_max_dogs:Number(v('max_dogs')),p_description:v('description'),
    p_photo_urls:urls.length?urls:null
   });
   if(error)throw Error(error.message);
-  status.textContent='Cambios enviados a revisión. Se conserva el registro original.';
+  status.textContent=window.v72EditingAsAdmin?'Cambios administrativos guardados.':'Cambios enviados a revisión. Se conserva el registro original.';
   await loadMyProperties();await loadPublishedProperties();
   setTimeout(v37Close,1800);
  }catch(err){status.textContent='Error: '+err.message}finally{button.disabled=false}
@@ -2536,3 +2545,28 @@ const v61OldLoadInbox=window.v60LoadInbox;window.v60LoadInbox=async function(){a
 })();
 </script>
 </body></html>
+<script>
+function v72Home(){
+ const editor=document.getElementById('v37Editor');if(editor&&!editor.hidden&&typeof v37Close==='function')v37Close();
+ if(typeof go==='function')go('guestDashboard');
+ window.scrollTo({top:0,behavior:'instant'});
+}
+window.v72Home=v72Home;
+async function v72AdminEdit(id){
+ const db=typeof vapaDb==='function'?vapaDb():null;if(!db)return alert('Sin conexión a Supabase');
+ const {data:{user}}=await db.auth.getUser();if(!user)return alert('Inicia sesión');
+ const {data:profile,error}=await db.from('profiles').select('role').eq('id',user.id).single();
+ if(error||profile?.role!=='admin')return alert('Solo el administrador puede editar otras propiedades');
+ await v37EditProperty(id,true);
+}
+window.v72AdminEdit=v72AdminEdit;
+// Editor exists outside the active .page; keep it visible in mobile viewport.
+const v72OldEdit=window.v37EditProperty;
+window.v37EditProperty=async function(id,admin=false){
+ await v72OldEdit(id,admin);
+ const editor=document.getElementById('v37Editor');
+ if(editor&&!editor.hidden){editor.style.position='relative';editor.style.zIndex='15';editor.scrollIntoView({block:'start',behavior:'smooth'});}
+};
+// Apply to sidebar VAPA logo(s) when they exist.
+document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('.vapa-logo').forEach(el=>{el.setAttribute('role','button');el.setAttribute('tabindex','0');el.setAttribute('aria-label','VAPA: volver al inicio');el.style.cursor='pointer';el.addEventListener('click',v72Home);el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();v72Home()}})})});
+</script>
