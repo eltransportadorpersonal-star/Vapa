@@ -1,0 +1,1 @@
+Acceso con Google como opción principal; alternativa por correo y contraseña oculta y desplegable. No cambia la autenticación Supabase ni habilita pagos. Basado en V72C staging. Probar antes de producción.

@@ -1,0 +1,1 @@
+V72B: corrige el botón Usar recorrido en solicitud. Google Maps google-v65.js almacena la cotización en window.v56Quote, mientras que el manejador antiguo consultaba v56Quote local. Se conserva Google Maps, la cotización y las funciones Netlify. No habilita cobros reales. Subir al proyecto vapa después de respaldar la versión publicada y comprobar formulario.

@@ -1,0 +1,1 @@
+V72C: Se prioriza window.v56Quote generado por Google Maps para pasar el recorrido al formulario. Se bloquea la inserción de solicitudes de transporte sin pago confirmado. NO incluye integración de pago de transporte con Mercado Pago. El backend de checkout, webhook idempotente y confirmación de pago siguen pendientes. No se recomienda producción sin prueba integral.
