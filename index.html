@@ -618,7 +618,7 @@ body:has(#v55ServicesPage.active) > #v53MobileQuick { display:none !important; }
 #v72eSessionControl button{font:600 14px/1.2 system-ui,sans-serif;border:1px solid #b8d3c8;border-radius:999px;padding:11px 15px;min-height:44px;box-shadow:0 2px 12px #0002;cursor:pointer;background:#fff;color:#124a3d}
 #v72eSessionControl button[data-state="out"]{background:#124a3d;color:white;border-color:#124a3d}
 @media(max-width:700px){#v72eSessionControl{top:env(safe-area-inset-top, 0px);right:8px;transform:translateY(8px)}#v72eSessionControl button{font-size:12px;padding:9px 12px;min-height:40px}}
-</style></head><body>
+</style><style id="v76-style">.v76-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}.v76-actions button{padding:10px 15px;border-radius:9px;cursor:pointer}.v76-cancel{border:1px solid #d9a9a9;background:#fff;color:#963c3c}</style><style>.v77-payment-notice{padding:13px 15px;margin:12px 0;border:1px solid #bedbd0;background:#f1faf5;border-radius:10px;color:#124639}.v76-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.v76-actions button{padding:10px 14px;border-radius:9px;cursor:pointer}</style></head><body>
 <div class="mobile-topbar">
   <button type="button" class="mobile-logo v72-home-logo" onclick="v72Home()" aria-label="VAPA: volver al inicio">VAPA</button>
   <button type="button" class="v58-reservas-header" onclick="go('v52OwnerApprovals')" aria-label="Ver reservas"><span aria-hidden="true">▣</span> Reservas</button>
@@ -2074,7 +2074,7 @@ function v42Recalc(){
  if(q.dogs>max){el.innerHTML='<span>Capacidad de la propiedad</span><strong>Máximo '+max+' perros para este grupo</strong>';return}
  el.innerHTML=`<span>${q.blocks*90} minutos · ${Math.max(0,q.dogs-1)} perro(s) adicional(es) × $${q.extraDogPrice.toLocaleString('es-CL')} por bloque · descuento ${Math.round(q.discount*100)}%</span><strong>$${q.total.toLocaleString('es-CL')}</strong>`;
 }
-async function v42Request(){const p=window.v42CurrentProperty,day=document.getElementById('v42Date').value,slot=document.getElementById('v42Time').value,q=v43Quote();if(!p||!day||slot===''||!q)return alert('Selecciona fecha y horario.');if(document.getElementById('v43Availability')?.dataset.available==='no')return alert('Ese horario está ocupado.');if(!document.getElementById('v48DogTerms').checked)return alert('Acepta las condiciones de registro de perros.');if(!document.getElementById('v43Private').checked)return alert('Confirma que todos los asistentes se conocen.');if(q.dogs>(Number(p.max_dogs)||3))return alert('Se supera la capacidad de perros.');const db=vapaDb();if(!db)return alert('No hay conexión a Supabase.');const {data:{user}}=await db.auth.getUser();if(!user)return alert('Inicia sesión antes de reservar.');const {data,error}=await db.rpc('v43_create_reservation',{p_property_id:p.id,p_day:day,p_slot:Number(slot),p_blocks:q.blocks,p_people:q.people,p_dogs:q.dogs,p_pool:q.pool});if(error)return alert('No se pudo guardar la reserva: '+error.message+'\nComprueba que la migración V43 esté aplicada.');const {data:checkout,error:payError}=await db.functions.invoke('mp-create-checkout',{body:{reservation_id:data.id}});if(payError||!checkout?.checkout_url){alert('Reserva guardada, pero no fue posible iniciar Mercado Pago. Revisa Mis reservas.');go('myReservations');return;}window.location.assign(checkout.checkout_url);}
+async function v42Request(){const p=window.v42CurrentProperty,day=document.getElementById('v42Date').value,slot=document.getElementById('v42Time').value,q=v43Quote();if(!p||!day||slot===''||!q)return alert('Selecciona fecha y horario.');if(document.getElementById('v43Availability')?.dataset.available==='no')return alert('Ese horario está ocupado.');if(!document.getElementById('v48DogTerms').checked)return alert('Acepta las condiciones de registro de perros.');if(!document.getElementById('v43Private').checked)return alert('Confirma que todos los asistentes se conocen.');if(q.dogs>(Number(p.max_dogs)||3))return alert('Se supera la capacidad de perros.');const db=vapaDb();if(!db)return alert('No hay conexión a Supabase.');const {data:{user}}=await db.auth.getUser();if(!user)return alert('Inicia sesión antes de reservar.');const {data,error}=await db.rpc('v43_create_reservation',{p_property_id:p.id,p_day:day,p_slot:Number(slot),p_blocks:q.blocks,p_people:q.people,p_dogs:q.dogs,p_pool:q.pool});if(error)return alert('No se pudo guardar la reserva: '+error.message+'\nComprueba que la migración V43 esté aplicada.');const {data:checkout,error:payError}=await db.functions.invoke('mp-create-checkout',{body:{reservation_id:data.id}});if(payError||!checkout?.checkout_url){alert('Reserva guardada, pero no fue posible iniciar Mercado Pago. Revisa Mis reservas.');go('myReservations');return;}sessionStorage.setItem('vapa_checkout_reservation',data.id);window.location.assign(checkout.checkout_url);}
 
 let v43AvailabilityToken=0;
 async function v43CheckAvailability(){
@@ -2100,7 +2100,7 @@ async function v43LoadReservationsPage(){
  const {data:auth,error:authError}=await db.auth.getUser();
  const user=auth?.user;
  if(authError||!user){out.textContent='Inicia sesión para consultar tus reservas.';return}
- const {data,error}=await db.from('reservations').select('id,property_id,start_at,end_at,amount,status,people,payment_status').eq('user_id',user.id).order('created_at',{ascending:false}).limit(50);
+ const {data,error}=await db.from('reservations').select('id,property_id,start_at,end_at,amount,status,people,payment_status,expires_at').eq('user_id',user.id).order('created_at',{ascending:false}).limit(50);
  if(error){out.textContent='Error al consultar reservas: '+error.message;return}
  out.replaceChildren();
  if(!data?.length){out.textContent='No hay reservas asociadas a esta cuenta. Si acabas de reservar, comprueba que sigues usando el mismo usuario.';return}
@@ -2109,9 +2109,37 @@ async function v43LoadReservationsPage(){
   const title=document.createElement('strong');title.textContent='Reserva '+r.id.slice(0,8)+' · $'+Number(r.amount||0).toLocaleString('es-CL');
   const desc=document.createElement('p');desc.style.margin='7px 0';
   desc.textContent=new Date(r.start_at).toLocaleString('es-CL',{timeZone:'America/Santiago',dateStyle:'medium',timeStyle:'short'})+' · '+r.status+' · pago: '+(r.payment_status||'pendiente');
-  card.append(title,desc);out.append(card);
+  card.append(title,desc);
+  const pending=r.status==='pending_payment'&&r.payment_status!=='paid';
+  const expired=pending&&(!r.expires_at||new Date(r.expires_at).getTime()<=Date.now());
+  const actions=document.createElement('div');actions.className='v76-actions';
+  if(pending&&!expired){
+   const pay=document.createElement('button');pay.className='primary';pay.textContent='Reintentar pago';
+   pay.onclick=async()=>{pay.disabled=true;try{const {data:checkout,error:e}=await db.functions.invoke('mp-create-checkout',{body:{reservation_id:r.id}});if(e||!checkout?.checkout_url)throw Error(checkout?.error||e?.message||'No se pudo abrir el pago');sessionStorage.setItem('vapa_checkout_reservation',r.id);location.assign(checkout.checkout_url)}catch(e){alert('No se pudo iniciar el pago: '+e.message);pay.disabled=false}};
+   actions.append(pay);
+   const cancel=document.createElement('button');cancel.className='v76-cancel';cancel.textContent='Cancelar reserva';
+   cancel.onclick=async()=>{if(!confirm('¿Cancelar esta reserva sin pago? Esta acción no se puede deshacer.'))return;cancel.disabled=true;const {error:e}=await db.rpc('v76_cancel_unpaid_reservation',{p_reservation_id:r.id});if(e){alert(e.message);cancel.disabled=false}else await v43LoadReservationsPage()};actions.append(cancel);
+  }else{const note=document.createElement('span');note.textContent=expired?'Plazo de pago vencido. Haz una nueva reserva.':r.payment_status==='paid'?'Pago registrado.':r.status==='cancelled'?'Reserva cancelada.':r.status==='rejected'?'Reserva rechazada.':'';if(note.textContent)actions.append(note)}
+  if(actions.childNodes.length)card.append(actions);
+  out.append(card);
  }
 }
+// V77: regreso desde Mercado Pago, con estado verificado únicamente en Supabase.
+(function(){
+ const params=new URLSearchParams(location.search);
+ const source=params.get('payment_result')||params.get('vapa_return');
+ if(!source)return;
+ const status=params.get('status')||params.get('collection_status')||source;
+ const message=(status==='approved'||status==='success')?'Mercado Pago informó un pago. Estamos verificando su confirmación.':status==='pending'?'El pago sigue pendiente. Puedes revisar su estado aquí.':'No se completó el pago. Puedes reintentarlo mientras la reserva siga vigente.';
+ const show=()=>{
+   if(typeof window.go!=='function')return;
+   window.go('myReservations');
+   const out=document.getElementById('v43ReservationsPage');
+   if(out){const banner=document.createElement('div');banner.className='v77-payment-notice';banner.textContent=message;out.parentElement?.insertBefore(banner,out);}
+   const u=new URL(location.href);['payment_result','view','vapa_return','status','collection_status','payment_id','collection_id','external_reference','preference_id','merchant_order_id','payment_type','site_id','processing_mode','merchant_account_id'].forEach(k=>u.searchParams.delete(k));history.replaceState(null,'',u.pathname+u.search+u.hash);
+ };
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(show,600),{once:true});else setTimeout(show,600);
+})();
 // Actualiza el panel cada vez que se navega a Mis reservas, sin reemplazar la navegación existente.
 (function(){const oldGo=window.go;window.go=function(id){oldGo(id);if(id==='myReservations')v43LoadReservationsPage()};})();
 async function v43MyReservations(){

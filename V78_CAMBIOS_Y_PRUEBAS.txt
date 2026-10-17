@@ -1,0 +1,4 @@
+V78: Corrige lectura de payment_result y view=reservations para coincidir con la Edge Function desplegada manualmente. Conserva V75/V77.
+IMPORTANTE: El botón de reintento se muestra SOLO mientras expires_at esté en el futuro y status=pending_payment. Las reservas antiguas vencidas no recuperan su plazo.
+GitHub: subir archivos DESCOMPRIMIDOS a rama desarrollo-v73, NO el ZIP, y revisar diff antes de confirmar.
+No modificar producción sin comprobar flujo en staging.

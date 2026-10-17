@@ -1,0 +1,10 @@
+VAPA V77 | Reservas con 15 minutos y regreso desde Mercado Pago
+
+1. El SQL de reservas V43/V51 ya usa 15 minutos: esta versión no extiende reservas existentes ni reinicia plazos al reintentar.
+2. En Mis reservas, Reintentar pago solo aparece en pending_payment, no pagada y con expires_at futuro.
+3. Se modificó supabase/functions/mp-create-checkout/index.ts para retornar a /?vapa_return=success|failure|pending. ESTE ARCHIVO DEBE DESPLEGARSE COMO EDGE FUNCTION EN SUPABASE; publicar solamente el ZIP en Netlify NO ACTIVA LOS NUEVOS back_urls.
+4. IMPORTANTE: configurar SITE_ORIGIN en Supabase con el dominio donde se hace la prueba (https://prueba42.netlify.app para staging, https://vapa.netlify.app para producción), sin barra final. SITE_ORIGIN también se usa como cabecera CORS.
+5. La confirmación real depende del webhook, no del regreso del navegador. Verificar pago real de prueba y estados en Supabase.
+6. No habilita pagar reservas expired ni pagos ya confirmados; no ofrece reembolso.
+7. Se conserva la función SQL de cancelación de V76, ya instalada.
+8. Probar primero en staging y con credenciales de prueba, nunca con tarjeta personal.
