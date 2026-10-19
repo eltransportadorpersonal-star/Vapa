@@ -44,3 +44,5 @@ PASOS PARA ACTIVAR V35:
 4. Authentication > URL Configuration: configurar Site URL y Redirect URLs del dominio Netlify/Vercel.
 5. Publicar todos los archivos de esta carpeta en Netlify o Vercel.
 6. Prueba: crear un usuario distinto, postular propiedad, entrar como admin, aprobarla y revisar Propiedades.
+
+VAPA V78 - Prueba de despliegue de la rama desarrollo-v73 en Netlify.
