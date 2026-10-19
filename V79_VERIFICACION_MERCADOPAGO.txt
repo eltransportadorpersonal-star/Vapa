@@ -1,0 +1,10 @@
+VAPA V79 - VERIFICACIÓN MERCADO PAGO (SOLO DIAGNÓSTICO)
+
+Cambio: se añade botón "Verificar Mercado Pago" en /admin/, visible únicamente tras pasar la verificación de perfil administrador existente.
+Usa la sesión Supabase para invocar Edge Function vapa-check-mp, que compara el User ID obtenido de Mercado Pago con 3762542373.
+No realiza cobros, reembolsos ni modificaciones de reservas.
+
+Requisitos: Edge Function vapa-check-mp publicada con Verify JWT ON y código del diagnóstico implementado previamente.
+Pasos: publicar ZIP en Netlify, entrar a https://vapa.netlify.app/admin/ con cuenta administradora y pulsar "Verificar Mercado Pago".
+Si falla por JWT, revisar compatibilidad de clave publishable con Verify JWT de Supabase. NO pegar service_role ni Access Token en el navegador.
+La coincidencia de ID identifica la cuenta que responde a /users/me, pero no garantiza por sí sola que todas las operaciones posteriores sean de prueba.

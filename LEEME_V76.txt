@@ -1,0 +1,1 @@
+V76: Mis reservas permite reabrir Mercado Pago en reservas pendientes vigentes y cancelar reservas sin pago. Ejecutar V76_CANCELACION_RESERVAS.sql en Supabase antes de publicar. No incluye reembolsos ni comprobantes. Verificar en Mercado Pago cualquier intento de pago antes de cancelar.
