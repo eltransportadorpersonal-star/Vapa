@@ -1,0 +1,31 @@
+
+name: VAPA - Validar devoluciones
+
+on:
+  push:
+    branches:
+      - vapa-devoluciones-mp
+    paths:
+      - "supabase/functions/mp-refund-payment/**"
+      - ".github/workflows/deno-check.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validar:
+    name: Comprobar TypeScript con Deno
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Validar función de devoluciones
+        run: deno check supabase/functions/mp-refund-payment/index.ts
