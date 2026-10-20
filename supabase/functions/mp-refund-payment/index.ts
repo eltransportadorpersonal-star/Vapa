@@ -96,9 +96,38 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      const payment = await response.json();
+      
+const payment = await response.json();
 
-      const valid =
+// Detectar pagos que Mercado Pago ya registra como devueltos.
+if (payment.status === "refunded") {
+  results.push({
+    reservation_id: reservation.id,
+    ready: false,
+    payment_status: payment.status,
+    reason: "Payment already refunded - manual reconciliation required",
+  });
+  continue;
+}
+
+// Detectar devoluciones registradas en Mercado Pago.
+const existingRefunds = Array.isArray(payment.refunds)
+  ? payment.refunds
+  : [];
+
+if (existingRefunds.length > 0) {
+  results.push({
+    reservation_id: reservation.id,
+    ready: false,
+    payment_status: payment.status,
+    reason: "Existing refund found - reconciliation required",
+    refund_count: existingRefunds.length,
+  });
+  continue;
+}
+
+const valid =
+
         payment.status === "approved" &&
         payment.currency_id === "CLP" &&
         String(payment.external_reference) === reservation.id &&
