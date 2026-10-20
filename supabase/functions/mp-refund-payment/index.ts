@@ -75,7 +75,9 @@ Deno.serve(async (req) => {
   const results = [];
 
   for (const reservation of reservations ?? []) {
-    try {
+  const idempotencyKey = `vapa-refund-${reservation.id}`;
+
+  try {
       const response = await fetch(
         `https://api.mercadopago.com/v1/payments/${
           encodeURIComponent(reservation.mp_payment_id)
@@ -134,12 +136,13 @@ const valid =
         Number(payment.transaction_amount) === reservation.amount;
 
       results.push({
-        reservation_id: reservation.id,
-        ready: valid,
-        payment_status: payment.status,
-        amount_matches:
-          Number(payment.transaction_amount) === reservation.amount,
-      });
+  reservation_id: reservation.id,
+  idempotency_key: idempotencyKey,
+  ready: valid,
+  payment_status: payment.status,
+  amount_matches:
+    Number(payment.transaction_amount) === reservation.amount,
+});
     } catch {
       results.push({
         reservation_id: reservation.id,
