@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-function respond(data: unknown, status = 200) {
+function respond(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
@@ -13,13 +13,11 @@ function respond(data: unknown, status = 200) {
 function constantTimeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
   let diff = 0;
-  for (let i = 0; i < a.length; i++) {
-    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
   return diff === 0;
 }
 
-Deno.serve(async (req) => {
+Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method !== "POST") {
     return respond({ error: "Method not allowed" }, 405);
   }
@@ -37,7 +35,6 @@ Deno.serve(async (req) => {
   const authorization = req.headers.get("Authorization") ?? "";
   const suppliedToken = authorization.replace(/^Bearer\s+/i, "");
   const suppliedSecret = req.headers.get("x-refund-cron-secret") ?? "";
-
   if (!constantTimeEqual(suppliedToken, serviceKey) ||
       !constantTimeEqual(suppliedSecret, cronSecret)) {
     return respond({ error: "Unauthorized" }, 401);
@@ -54,7 +51,6 @@ Deno.serve(async (req) => {
     .eq("payment_status", "paid")
     .eq("refund_status", "pending")
     .not("mp_payment_id", "is", null)
-    .order("id", { ascending: true })
     .limit(20);
 
   if (error) {
@@ -64,11 +60,9 @@ Deno.serve(async (req) => {
 
   const results: Record<string, unknown>[] = [];
   for (const reservation of reservations ?? []) {
-    // Diagnostic identifier only; NOT sent to Mercado Pago.
-    const idempotencyKey = `vapa-refund-${reservation.id}`;
     const base = {
       reservation_id: reservation.id,
-      idempotency_key: idempotencyKey,
+      idempotency_key: `vapa-refund-${reservation.id}`,
     };
 
     try {
@@ -77,20 +71,25 @@ Deno.serve(async (req) => {
         `https://api.mercadopago.com/v1/payments/${paymentId}`,
         { headers: { Authorization: `Bearer ${mpToken}` } },
       );
-
       if (!paymentResponse.ok) {
         results.push({ ...base, ready: false, reason: "Payment lookup failed", http_status: paymentResponse.status });
         continue;
       }
 
       const payment = await paymentResponse.json();
-      const amountMatches = Number(payment.transaction_amount) === Number(reservation.amount);
-      const paymentMatches =
+      const matches =
         String(payment.id) === String(reservation.mp_payment_id) &&
         payment.currency_id === "CLP" &&
         String(payment.external_reference) === reservation.id &&
-        amountMatches;
+        Number(payment.transaction_amount) === Number(reservation.amount);
 
-      if (!paymentMatches) {
-        results.push({ ...base, ready: false, reason: "Payment details mismatch", payment_status: payment.status, amount_matches: amountMatches });
+      if (!matches) {
+        results.push({ ...base, ready: false, reason: "Payment details mismatch", payment_status: payment.status });
         continue;
+      }
+
+      if (payment.status === "refunded" || payment.status === "charged_back" ||
+          (Array.isArray(payment.refunds) && payment.refunds.length > 0)) {
+        results.push({ ...base, ready: false, reason: "Existing refund or chargeback; reconcile manually", payment_status: payment.status });
+        continue;
+      }
