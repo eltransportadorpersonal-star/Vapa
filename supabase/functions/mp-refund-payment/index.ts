@@ -1,8 +1,7 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-import { createClient } from
-  "https://esm.sh/@supabase/supabase-js@2";
-
-function respond(data: unknown, status = 200) {
+/** VAPA V80: Refund diagnostics only. This function NEVER creates refunds. */
+function respond(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
@@ -12,10 +11,15 @@ function respond(data: unknown, status = 200) {
   });
 }
 
+function constantTimeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 Deno.serve(async (req) => {
-  if (req.method !== "POST") {
-    return respond({ error: "Method not allowed" }, 405);
-  }
+  if (req.method !== "POST") return respond({ error: "Method not allowed" }, 405);
 
   const url = Deno.env.get("SUPABASE_URL");
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -27,35 +31,17 @@ Deno.serve(async (req) => {
     return respond({ error: "Missing configuration" }, 500);
   }
 
-  // Primera protección: JWT de Supabase.
   const authorization = req.headers.get("Authorization") ?? "";
   const suppliedToken = authorization.replace(/^Bearer\s+/i, "");
-
-  if (suppliedToken !== serviceKey) {
-    return respond({ error: "Unauthorized" }, 401);
-  }
-
-  // Segunda protección: secreto exclusivo del programador.
   const suppliedSecret = req.headers.get("x-refund-cron-secret") ?? "";
 
-  if (suppliedSecret.length !== cronSecret.length) {
-    return respond({ error: "Unauthorized" }, 401);
-  }
-
-  let diff = 0;
-  for (let i = 0; i < cronSecret.length; i++) {
-    diff |= suppliedSecret.charCodeAt(i) ^ cronSecret.charCodeAt(i);
-  }
-
-  if (diff !== 0) {
+  if (!constantTimeEqual(suppliedToken, serviceKey) ||
+      !constantTimeEqual(suppliedSecret, cronSecret)) {
     return respond({ error: "Unauthorized" }, 401);
   }
 
   const db = createClient(url, serviceKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
+    auth: { autoRefreshToken: false, persistSession: false },
   });
 
   const { data: reservations, error } = await db
@@ -65,6 +51,7 @@ Deno.serve(async (req) => {
     .eq("payment_status", "paid")
     .eq("refund_status", "pending")
     .not("mp_payment_id", "is", null)
+    .order("id", { ascending: true })
     .limit(20);
 
   if (error) {
@@ -72,92 +59,37 @@ Deno.serve(async (req) => {
     return respond({ error: "Refund lookup failed" }, 500);
   }
 
-  const results = [];
+  const results: Record<string, unknown>[] = [];
 
   for (const reservation of reservations ?? []) {
-  const idempotencyKey = `vapa-refund-${reservation.id}`;
+    // Stable identifier for future refund attempts; NOT sent to Mercado Pago yet.
+    const idempotencyKey = `vapa-refund-${reservation.id}`;
+    const base = {
+      reservation_id: reservation.id,
+      idempotency_key: idempotencyKey,
+    };
 
-  try {
-      const response = await fetch(
-        `https://api.mercadopago.com/v1/payments/${
-          encodeURIComponent(reservation.mp_payment_id)
-        }`,
-        {
-          headers: {
-            Authorization: `Bearer ${mpToken}`,
-          },
-        }
+    try {
+      const paymentId = encodeURIComponent(String(reservation.mp_payment_id));
+      const paymentResponse = await fetch(
+        `https://api.mercadopago.com/v1/payments/${paymentId}`,
+        { headers: { Authorization: `Bearer ${mpToken}` } },
       );
 
-      if (!response.ok) {
-        results.push({
-          reservation_id: reservation.id,
-          ready: false,
-          reason: "Payment lookup failed",
-        });
+      if (!paymentResponse.ok) {
+        results.push({ ...base, ready: false, reason: "Payment lookup failed", http_status: paymentResponse.status });
         continue;
       }
 
-      
-const payment = await response.json();
-
-// Detectar pagos que Mercado Pago ya registra como devueltos.
-if (payment.status === "refunded") {
-  results.push({
-    reservation_id: reservation.id,
-    ready: false,
-    payment_status: payment.status,
-    reason: "Payment already refunded - manual reconciliation required",
-  });
-  continue;
-}
-
-// Detectar devoluciones registradas en Mercado Pago.
-const existingRefunds = Array.isArray(payment.refunds)
-  ? payment.refunds
-  : [];
-
-if (existingRefunds.length > 0) {
-  results.push({
-    reservation_id: reservation.id,
-    ready: false,
-    payment_status: payment.status,
-    reason: "Existing refund found - reconciliation required",
-    refund_count: existingRefunds.length,
-  });
-  continue;
-}
-
-const valid =
-
-        payment.status === "approved" &&
+      const payment = await paymentResponse.json();
+      const amountMatches = Number(payment.transaction_amount) === Number(reservation.amount);
+      const paymentMatches =
+        String(payment.id) === String(reservation.mp_payment_id) &&
         payment.currency_id === "CLP" &&
         String(payment.external_reference) === reservation.id &&
-        Number(payment.transaction_amount) === reservation.amount;
+        amountMatches;
 
-      results.push({
-  reservation_id: reservation.id,
-  idempotency_key: idempotencyKey,
-  ready: valid,
-  payment_status: payment.status,
-  amount_matches:
-    Number(payment.transaction_amount) === reservation.amount,
-});
-    } catch {
-      results.push({
-        reservation_id: reservation.id,
-        ready: false,
-        reason: "Payment lookup error",
-      });
-    }
-  }
-
-  return respond({
-    mode: "dry_run",
-    pending_refunds: reservations?.length ?? 0,
-    checked: results.length,
-    results,
-    refunds_executed: 0,
-    message: "Diagnostic only. No refunds executed.",
-  });
-});
+      if (!paymentMatches) {
+        results.push({ ...base, ready: false, reason: "Payment details mismatch", payment_status: payment.status, amount_matches: amountMatches });
+        continue;
+      }
