@@ -93,3 +93,40 @@ Deno.serve(async (req: Request): Promise<Response> => {
         results.push({ ...base, ready: false, reason: "Existing refund or chargeback; reconcile manually", payment_status: payment.status });
         continue;
       }
+
+      // Read-only check. Do not assume a missing refunds array means no refunds.
+      const refundsResponse = await fetch(
+        `https://api.mercadopago.com/v1/payments/${paymentId}/refunds`,
+        { headers: { Authorization: `Bearer ${mpToken}` } },
+      );
+      if (!refundsResponse.ok) {
+        results.push({ ...base, ready: false, reason: "Refund history lookup failed", http_status: refundsResponse.status });
+        continue;
+      }
+
+      const refundHistory: unknown = await refundsResponse.json();
+      if (!Array.isArray(refundHistory)) {
+        results.push({ ...base, ready: false, reason: "Unexpected refund history response" });
+        continue;
+      }
+      if (refundHistory.length > 0) {
+        results.push({ ...base, ready: false, reason: "Previous refund detected; reconciliation required", refund_count: refundHistory.length });
+        continue;
+      }
+
+      results.push({ ...base, ready: payment.status === "approved", payment_status: payment.status, amount_matches: true });
+    } catch (err) {
+      console.error("Refund diagnostic error", err instanceof Error ? err.message : "Unknown error");
+      results.push({ ...base, ready: false, reason: "Payment or refund lookup error" });
+    }
+  }
+
+  return respond({
+    mode: "dry_run",
+    pending_refunds: reservations?.length ?? 0,
+    checked: results.length,
+    results,
+    refunds_executed: 0,
+    message: "Diagnostic only. No refunds executed.",
+  });
+});
