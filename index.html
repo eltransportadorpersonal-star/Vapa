@@ -1675,6 +1675,12 @@ async function joinEarlyCommunity(){
   <div class="admin-real-head"><div><span class="real-kicker">ADMINISTRACIÓN VAPA</span><h1>Propiedades por revisar</h1></div><button onclick="loadAdminProperties()">Actualizar</button></div>
   <div class="admin-tabs-real"><button onclick="loadAdminProperties('pending_review')">Pendientes</button><button onclick="loadAdminProperties('changes_requested')">Cambios solicitados</button><button onclick="loadAdminProperties('published')">Publicadas</button><button onclick="loadAdminProperties('rejected')">Rechazadas</button></div>
   <div class="v55-panel" style="margin:20px 0"><h2>Bandeja de solicitudes VAPA</h2><p>Interesados, viajes, conductores y profesionales. Las aprobaciones no generan cobros ni asignaciones automáticas.</p><button type="button" onclick="v60LoadInbox()">Actualizar solicitudes</button><div id="v61Assignment" style="margin-top:12px"></div><div id="v60Inbox" aria-live="polite" style="margin-top:16px">Pulsa actualizar para consultar.</div></div>
+  <div class="v55-panel" style="margin:20px 0;padding:20px;border:1px solid #dce7df;border-radius:14px;background:#fff">
+   <h2>Diagnóstico de devolución (solo lectura)</h2>
+   <p>Reserva de prueba: $6.000 CLP. Consulta el pago en Mercado Pago; no devuelve dinero ni cambia reservas.</p>
+   <button id="vapaRefundDiagnosticButton" type="button" class="primary" onclick="vapaRunRefundDiagnostic()">Verificar devolución de prueba</button>
+   <div id="vapaRefundDiagnosticResult" role="status" aria-live="polite" style="margin-top:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px"></div>
+  </div>
   <div id="adminPropertyList" class="admin-property-list"><div class="real-empty">Conecta Supabase para cargar propiedades reales.</div></div>
  </div>
 </section>
@@ -1684,6 +1690,45 @@ function vapaDb(){
  if(!window.VAPA_CONFIG || !VAPA_CONFIG.supabaseUrl || VAPA_CONFIG.supabaseUrl.includes('TU_')) return null;
  return window.supabase.createClient(VAPA_CONFIG.supabaseUrl,VAPA_CONFIG.supabaseAnonKey);
 }
+async function vapaRunRefundDiagnostic(){
+ const output=document.getElementById('vapaRefundDiagnosticResult');
+ const button=document.getElementById('vapaRefundDiagnosticButton');
+ if(!output||!button)return;
+ button.disabled=true;
+ output.textContent='Verificando sesión y consultando Mercado Pago...';
+ try{
+  const db=vapaDb();
+  if(!db)throw Error('No se pudo conectar a Supabase.');
+  const {data:sessionData,error:sessionError}=await db.auth.getSession();
+  if(sessionError||!sessionData?.session?.access_token)throw Error('Inicia sesión con tu cuenta administradora de VAPA.');
+  const {data:authData,error:authError}=await db.auth.getUser();
+  if(authError||!authData?.user)throw Error('No se pudo verificar tu sesión.');
+  const {data:profile,error:profileError}=await db.from('profiles').select('role').eq('id',authData.user.id).maybeSingle();
+  if(profileError||profile?.role!=='admin')throw Error('Esta consulta está reservada a administradores.');
+  const {data,error}=await db.functions.invoke('vapa-refund-diagnostic',{body:{}});
+  if(error){
+   let detail=error.message||'Error de conexión';
+   if(error.context && typeof error.context.json==='function'){
+    try{const response=await error.context.json();detail=response.error||response.message||detail;}catch(_){}
+   }
+   throw Error(detail);
+  }
+  if(!data||data.mode!=='dry_run'||data.refunds_executed!==0)throw Error('Respuesta inesperada. No se confirmó el modo diagnóstico.');
+  const lines=[
+   'Modo: diagnóstico (sin devoluciones)',
+   'Pago verificado: '+(data.verified===true?'Sí': 'No'),
+   'Estado Mercado Pago: '+(data.payment_status||'No disponible'),
+   'Monto $6.000: '+(data.amount_matches===true?'Coincide':'No confirmado'),
+   'Moneda CLP: '+(data.currency_matches===true?'Coincide':'No confirmada'),
+   'Reserva: '+(data.reservation_matches===true?'Coincide':'No confirmada'),
+   'Devoluciones ejecutadas: 0'
+  ];
+  if(data.http_status)lines.push('Respuesta de Mercado Pago: HTTP '+data.http_status);
+  output.textContent=lines.join('\n');
+ }catch(err){output.textContent='No se pudo completar el diagnóstico: '+(err?.message||'Error desconocido');}
+ finally{button.disabled=false;}
+}
+window.vapaRunRefundDiagnostic=vapaRunRefundDiagnostic;
 async function submitRealProperty(e){
  e.preventDefault();
  const form=e.currentTarget, status=document.getElementById('realFormStatus');
