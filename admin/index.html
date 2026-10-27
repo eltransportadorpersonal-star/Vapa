@@ -1,14 +1,7 @@
 <!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VAPA | Administración</title><style>
 :root{font-family:Arial,sans-serif;color:#21392e;background:#f4f7f2}*{box-sizing:border-box}body{margin:0}header{background:white;border-bottom:1px solid #dbe5dc;padding:19px max(20px,calc((100vw - 1100px)/2));display:flex;align-items:center;justify-content:space-between}header strong{font-size:25px;letter-spacing:.12em}a{color:#2b684b}main{max-width:1100px;margin:34px auto;padding:0 18px}h1{font-size:34px;margin:5px 0 8px}p{line-height:1.5;color:#52675a}.panel{background:white;border:1px solid #dbe5dc;border-radius:15px;padding:23px;margin:20px 0}.hidden{display:none!important}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat{background:white;border:1px solid #dbe5dc;border-radius:12px;padding:18px}.stat b{display:block;font-size:27px;margin-top:10px}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:24px 0 14px}button{cursor:pointer;border:1px solid #c5d6c9;background:white;border-radius:9px;padding:11px 15px;font-weight:700;color:#234532}button.active,button.primary{background:#265f43;color:white;border-color:#265f43}button.danger{color:#a13c32}button:disabled{opacity:.5;cursor:wait}input{width:100%;max-width:400px;padding:13px;border:1px solid #cbd8cf;border-radius:9px;margin:8px 0 15px}.item{display:grid;grid-template-columns:220px 1fr;gap:18px;padding:18px 0;border-bottom:1px solid #e3eae4}.item img{width:100%;height:170px;object-fit:cover;border-radius:10px}.photos{display:flex;gap:7px;overflow:auto;margin:12px 0}.photos img{width:100px;height:75px;object-fit:cover}.actions{display:flex;gap:8px;flex-wrap:wrap}.muted{font-size:13px;color:#647568}.error{color:#a13c32}.success{color:#276947}@media(max-width:650px){.stats{grid-template-columns:repeat(2,1fr)}.item{grid-template-columns:1fr}h1{font-size:27px}}</style></head><body>
 <header><strong>VAPA <span style="font-size:13px;letter-spacing:0;color:#6b7c70">/ ADMIN</span></strong><a href="/">Volver a VAPA ↗</a></header><main><div id="auth" class="panel"><h1>Acceso administrador</h1><p>Ingresa con tu cuenta de VAPA. Solo perfiles autorizados pueden ver este panel.</p><form id="login"><label>Correo electrónico<br><input type="email" id="email" required autocomplete="username"></label><br><label>Contraseña<br><input type="password" id="password" required autocomplete="current-password"></label><br><button class="primary" type="submit">Ingresar</button></form><p id="authMessage" role="status"></p></div>
-<div id="dashboard" class="hidden"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><div class="muted">CENTRO DE CONTROL</div><h1>Administración de propiedades</h1><p id="welcome"></p></div><button id="logout">Cerrar sesión</button></div><section class="stats" id="stats"></section><div class="panel">
-  <h2>Diagnóstico de Mercado Pago</h2>
-  <p>Consultar el pago de prueba de $6.000 sin modificar la reserva.</p>
-  <button id="checkPayment" type="button">
-    Verificar pago Mercado Pago
-  </button>
-  <pre id="paymentResult" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre>
-</div><section class="panel" id="mpDiagnosticPanel" aria-labelledby="mpDiagnosticTitle"><h2 id="mpDiagnosticTitle">Verificación de Mercado Pago</h2><p>Comprueba que el token configurado en Supabase corresponda a la cuenta de pruebas esperada. Esta consulta no cobra ni devuelve dinero.</p><button type="button" class="primary" id="mpDiagnosticButton">Verificar Mercado Pago</button><p id="mpDiagnosticResult" role="status" aria-live="polite"></p></section><div class="tabs" id="tabs"></div><div class="panel"><div style="display:flex;justify-content:space-between;align-items:center"><h2 id="sectionTitle">Pendientes</h2><button id="refresh">Actualizar</button></div><p id="message" role="status"></p><div id="list"></div></div></div></main>
+<div id="dashboard" class="hidden"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><div class="muted">CENTRO DE CONTROL</div><h1>Administración de propiedades</h1><p id="welcome"></p></div><button id="logout">Cerrar sesión</button></div><section class="stats" id="stats"></section><section class="panel" id="mpDiagnosticPanel" aria-labelledby="mpDiagnosticTitle"><h2 id="mpDiagnosticTitle">Verificación de Mercado Pago</h2><p>Comprueba que el token configurado en Supabase corresponda a la cuenta de pruebas esperada. Esta consulta no cobra ni devuelve dinero.</p><button type="button" class="primary" id="mpDiagnosticButton">Verificar Mercado Pago</button><p id="mpDiagnosticResult" role="status" aria-live="polite"></p></section><div class="tabs" id="tabs"></div><div class="panel"><div style="display:flex;justify-content:space-between;align-items:center"><h2 id="sectionTitle">Pendientes</h2><button id="refresh">Actualizar</button></div><p id="message" role="status"></p><div id="list"></div></div></div></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="/config.js"></script><script>
 const db=window.supabase.createClient(VAPA_CONFIG.supabaseUrl,VAPA_CONFIG.supabaseAnonKey);let state='pending_review';let adminUser=null;const $=id=>document.getElementById(id);const labels={pending_review:'Pendientes',changes_requested:'Cambios solicitados',published:'Publicadas',rejected:'Rechazadas',draft:'Borradores'};const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function verify(){const {data:{user},error}=await db.auth.getUser();if(error||!user){showLogin();return}const {data:profile,error:pe}=await db.from('profiles').select('role,full_name').eq('id',user.id).single();if(pe||profile?.role!=='admin'){await db.auth.signOut();showLogin('Tu cuenta no tiene permisos de administrador.');return}adminUser=user;$('auth').classList.add('hidden');$('dashboard').classList.remove('hidden');$('welcome').textContent='Sesión: '+(profile.full_name||user.email);await load()}
@@ -46,28 +39,4 @@ $('mpDiagnosticButton').addEventListener('click',async()=>{
  }catch(e){result.className='error';result.textContent='Verificación no completada: '+(e?.message||'Error desconocido')}
  finally{button.disabled=false}
 });
-$('checkPayment').addEventListener('click', async () => {
-  const button = $('checkPayment');
-  const result = $('paymentResult');
-
-  button.disabled = true;
-  result.textContent = 'Consultando pago en Mercado Pago...';
-
-  try {
-    const { data, error } = await db.functions.invoke(
-      'mp-reconcile-payment',
-      { body: {} }
-    );
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    result.textContent = JSON.stringify(data, null, 2);
-  } catch (error) {
-    result.textContent = 'Error de diagnóstico: ' + error.message;
-  } finally {
-    button.disabled = false;
-  }
-});
- verify();</script></body></html>
+verify();</script></body></html>
